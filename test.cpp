@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include "betree.hpp"
+#include "filesystem.hpp"
 
 void timer_start(uint64_t &timer)
 {
@@ -29,12 +30,13 @@ void timer_stop(uint64_t &timer)
   timer += 1000000*t.tv_sec + t.tv_usec;
 }
 
-int next_command(FILE *input, int *op, uint64_t *arg)
+int next_command(FILE *input, int *op, char arg[])
 {
   int ret;
   char command[64];
 
-  ret = fscanf(input, "%s %ld", command, arg);
+  ret = fscanf(input, "%s %s", command, arg);
+
   if (ret == EOF)
     return EOF;
   else if (ret != 2) {
@@ -119,62 +121,64 @@ void usage(char *name)
     << "    -i <script_file>                                [ default: none ]"                                  << std::endl;
 }
 
-int test(betree<uint64_t, std::string> &b,
+int test(betree<FKey, std::string> &b,
 	 uint64_t nops,
 	 uint64_t number_of_distinct_keys,
 	 FILE *script_input,
 	 FILE *script_output)
 {
-  std::map<uint64_t, std::string> reference;
+  std::map<FKey, std::string> reference;
 
   for (unsigned int i = 0; i < nops; i++) {
     int op;
-    uint64_t t;
+    char ck[256];
+    std::string t;
     if (script_input) {
-      int r = next_command(script_input, &op, &t);
+      int r = next_command(script_input, &op, ck);
+      t = std::string(ck);
       if (r == EOF)
 	exit(0);
       else if (r < 0)
 	exit(4);
     } else {
       op = rand() % 7;
-      t = rand() % number_of_distinct_keys;
+      t = std::to_string(rand() % number_of_distinct_keys);
     }
     
     switch (op) {
     case 0: // insert
       if (script_output)
-	fprintf(script_output, "Inserting %lu\n", t);
-      b.insert(t, std::to_string(t) + ":");
-      reference[t] = std::to_string(t) + ":";
+	fprintf(script_output, "Inserting %s\n", t.c_str());
+      b.insert(FKey(t), t + ":");
+      reference[FKey(t)] = t + ":";
       break;
     case 1: // update
       if (script_output)
-	fprintf(script_output, "Updating %lu\n", t);
-      b.update(t, std::to_string(t) + ":");
-      if (reference.count(t) > 0)
-      	reference[t] += std::to_string(t) + ":";
+	fprintf(script_output, "Updating %s\n", t.c_str());
+      b.update(FKey(t), t + ":");
+      if (reference.count(FKey(t)) > 0)
+        reference[FKey(t)] += t + ":";
       else
-      	reference[t] = std::to_string(t) + ":";
+        reference[FKey(t)] = t + ":";
       break;
     case 2: // delete
       if (script_output)
-	fprintf(script_output, "Deleting %lu\n", t);
-      b.erase(t);
-      reference.erase(t);
+	fprintf(script_output, "Deleting %s\n", t.c_str());
+      b.erase(FKey(t));
+      reference.erase(FKey(t));
       break;
     case 3: // query
       try {
-	std::string bval = b.query(t);
-	assert(reference.count(t) > 0);
-	std::string rval = reference[t];
+	std::string bval = b.query(FKey(t));
+	assert(reference.count(FKey(t)) > 0);
+	std::string rval = reference[FKey(t)];
 	assert(bval == rval);
 	if (script_output)
-	  fprintf(script_output, "Query %lu -> %s\n", t, bval.c_str());
+	  fprintf(script_output, "Query %s -> %s\n", t.c_str(), bval.c_str());
       } catch (std::out_of_range e) {
 	if (script_output)
-	  fprintf(script_output, "Query %lu -> DNE\n", t);
-	assert(reference.count(t) == 0);
+	  fprintf(script_output, "Query %s -> DNE\n", t.c_str());
+	assert(reference.count(FKey(t)) == 0);
       }
       break;
     case 4: // full scan
@@ -189,18 +193,18 @@ int test(betree<uint64_t, std::string> &b,
     case 5: // lower-bound scan
       {
 	if (script_output)
-	  fprintf(script_output, "Lower_bound_scan %lu\n", t);
-	auto betit = b.lower_bound(t);
-	auto refit = reference.lower_bound(t);
+	  fprintf(script_output, "Lower_bound_scan %s\n", t.c_str());
+	auto betit = b.lower_bound(FKey(t));
+	auto refit = reference.lower_bound(FKey(t));
 	do_scan(betit, refit, b, reference);
       }
       break;
     case 6: // scan
       {
 	if (script_output)
-	  fprintf(script_output, "Upper_bound_scan %lu\n", t);
-	auto betit = b.upper_bound(t);
-	auto refit = reference.upper_bound(t);
+	  fprintf(script_output, "Upper_bound_scan %s\n", t.c_str());
+	auto betit = b.upper_bound(FKey(t));
+	auto refit = reference.upper_bound(FKey(t));
 	do_scan(betit, refit, b, reference);
       }
       break;
@@ -214,7 +218,7 @@ int test(betree<uint64_t, std::string> &b,
   return 0;
 }
 
-void benchmark_upserts(betree<uint64_t, std::string> &b,
+void benchmark_upserts(betree<FKey, std::string> &b,
 		       uint64_t nops,
 		       uint64_t number_of_distinct_keys,
 		       uint64_t random_seed)
@@ -225,7 +229,7 @@ void benchmark_upserts(betree<uint64_t, std::string> &b,
     timer_start(timer);
     for (uint64_t i = 0; i < nops / 100; i++) {
       uint64_t t = rand() % number_of_distinct_keys;
-      b.update(t, std::to_string(t) + ":");
+      b.update(FKey(std::to_string(t)), std::to_string(t) + ":");
     }
     timer_stop(timer);
     printf("%ld %ld %ld\n", j, nops/100, timer);
@@ -234,7 +238,7 @@ void benchmark_upserts(betree<uint64_t, std::string> &b,
   printf("# overall: %ld %ld\n", 100*(nops/100), overall_timer);
 }
 
-void benchmark_queries(betree<uint64_t, std::string> &b,
+void benchmark_queries(betree<FKey, std::string> &b,
 		       uint64_t nops,
 		       uint64_t number_of_distinct_keys,
 		       uint64_t random_seed)
@@ -244,7 +248,7 @@ void benchmark_queries(betree<uint64_t, std::string> &b,
   srand(random_seed);
   for (uint64_t i = 0; i < nops; i++) {
     uint64_t t = rand() % number_of_distinct_keys;
-    b.update(t, std::to_string(t) + ":");
+    b.update(std::to_string(t), std::to_string(t) + ":");
   }
 
 	// Now go back and query it
@@ -253,7 +257,7 @@ void benchmark_queries(betree<uint64_t, std::string> &b,
 	timer_start(overall_timer);
   for (uint64_t i = 0; i < nops; i++) {
     uint64_t t = rand() % number_of_distinct_keys;
-    b.query(t);
+    b.query(std::to_string(t));
   }
 	timer_stop(overall_timer);
   printf("# overall: %ld %ld\n", nops, overall_timer);
@@ -404,7 +408,9 @@ int main(int argc, char **argv)
   
   one_file_per_object_backing_store ofpobs(backing_store_dir);
   swap_space sspace(&ofpobs, cache_size);
-  betree<uint64_t, std::string> b(&sspace, max_node_size, min_flush_size);
+  betree<FKey, std::string> b(&sspace, max_node_size, min_flush_size);
+  //betree<std::string, std::string> b(&sspace, max_node_size, min_flush_size);
+  //betree<uint64_t, std::string> b(&sspace, max_node_size, min_flush_size);
 
   if (strcmp(mode, "test") == 0) 
     test(b, nops, number_of_distinct_keys, script_input, script_output);
