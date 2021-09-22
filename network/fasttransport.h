@@ -29,12 +29,11 @@
  *
  **********************************************************************/
 
-#ifndef _LIB_FASTTRANSPORT_H_
-#define _LIB_FASTTRANSPORT_H_
+#ifndef _NETWORK_FASTTRANSPORT_H_
+#define _NETWORK_FASTTRANSPORT_H_
 
-#include "lib/configuration.h"
-#include "lib/transport.h"
-#include "lib/message.h"
+#include "network/configuration.h"
+#include "network/transport.h"
 
 #include "rpc.h"
 #include "rpc_constants.h"
@@ -160,11 +159,11 @@ public:
     void Run();
     void Wait();
     void Stop();
-    int Timer(uint64_t ms, timer_callback_t cb) override;
-    bool CancelTimer(int id) override;
-    void CancelAllTimers() override;
+    //int Timer(uint64_t ms, timer_callback_t cb) override;
+    //bool CancelTimer(int id) override;
+    //void CancelAllTimers() override;
 
-    bool SendRequestToReplica(TransportReceiver *src, uint8_t reqType, uint8_t replicaIdx, uint8_t dstRpcIdx, size_t msgLen) override;
+    bool SendRequestTo(TransportReceiver *src, uint8_t reqType, uint8_t replicaIdx, uint8_t dstRpcIdx, size_t msgLen) override;
     bool SendRequestToAll(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
     bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
     bool SendResponse(size_t msgLen) override;
@@ -173,7 +172,7 @@ public:
 
     uint8_t GetID() override { return id; };
 private:
-    // Configuration of the replicas
+    // Configuration containing the ids of the servers
     transport::Configuration config;
 
     // The port of the fast NIC
@@ -189,7 +188,7 @@ private:
     uint8_t id;
 
     // Index of the replica server
-    int replicaIdx;
+    int serverIdx;
 
     // Nexus object
     erpc::Nexus *nexus;
@@ -243,4 +242,4 @@ static void basic_sm_handler(int session_num, erpc::SmEventType sm_event_type,
             c->rpc->sec_since_creation());
 }
 
-#endif  // _LIB_FASTTRANSPORT_H_
+#endif  // _NETWORK_FASTTRANSPORT_H_
