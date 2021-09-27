@@ -1,10 +1,7 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
-#include "lib/assert.h"
-#include "lib/configuration.h"
-#include "lib/message.h"
-#include "lib/fasttransport.h"
+#include "network/configuration.h"
+#include "network/fasttransport.h"
 
-#include <google/protobuf/message.h>
 #include <event2/event.h>
 #include <event2/thread.h>
 
@@ -41,7 +38,8 @@ static void fasttransport_response(void *_context, void *_tag) {
     c->client.req_tag_pool.free(rt);
 }
 
-// Function called when we received a request
+// Function called when the server received a request
+// (clients never receive requests, just responses)
 static void fasttransport_request(erpc::ReqHandle *req_handle, void *_context) {
     // save the req_handle for when we are in the SendMessage function
     auto *c = static_cast<AppContext *>(_context);
@@ -137,12 +135,13 @@ FastTransport::FastTransport(const transport::Configuration &config,
 FastTransport::~FastTransport() {
 }
 
-void FastTransport::Register(TransportReceiver *receiver, int replicaIdx) {
+// Clients register with receiverIdx of -1
+void FastTransport::Register(TransportReceiver *receiver, int receiverIdx) {
 
-	ASSERT(replicaIdx < config.n);
+    assert(receiverIdx < config.n);
 
-    if (replicaIdx > -1) c->server.receiver = receiver;
-    this->replicaIdx = replicaIdx;
+    if (receiverIdx > -1) c->server.receiver = receiver;
+    this->receiverIdx = receiverIdx;
 }
 
 inline char *FastTransport::GetRequestBuf(size_t reqLen, size_t respLen) {
@@ -157,24 +156,24 @@ inline char *FastTransport::GetRequestBuf(size_t reqLen, size_t respLen) {
     return reinterpret_cast<char *>(c->client.crt_req_tag->req_msgbuf.buf);
 }
 
-inline int FastTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) {
-    auto session_key = std::make_pair(replicaIdx, dstRpcIdx);
+inline int FastTransport::GetSession(TransportReceiver *src, uint8_t serverIdx, uint8_t dstRpcIdx) {
+    auto session_key = std::make_pair(serverIdx, dstRpcIdx);
 
     const auto iter = c->client.sessions[src].find(session_key);
     if (iter == c->client.sessions[src].end()) {
-        // create a new session to the replica core
+        // create a new session to the server core
         // use the dafault port from eRPC for control path
         // TODO: pass in the number of numa nodes at the server (in the form of the mapping function)
         //int numa_nodes_at_servers = 2;
         //int numa_nodes_at_servers = 1;
-        int session_id = c->rpc->create_session(config.replica(replicaIdx).host + ":" +
+        int session_id = c->rpc->create_session(config.GetServerAddress(serverIdx).host + ":" +
                                        //std::to_string(erpc::kBaseSmUdpPort + dstRpcIdx % numa_nodes_at_servers), dstRpcIdx);
                                        std::to_string(erpc::kBaseSmUdpPort + dstRpcIdx), dstRpcIdx);
         while (!c->rpc->is_connected(session_id)) {
             c->rpc->run_event_loop_once();
         }
         c->client.sessions[src][session_key] = session_id;
-        Warning("Opened eRPC session to %s, RPC id: %d", (config.replica(replicaIdx).host + ":" + std::to_string(erpc::kBaseSmUdpPort)).c_str(), dstRpcIdx);
+        Warning("Opened eRPC session to %s, RPC id: %d", (config.GetServerAddress(serverIdx).host + ":" + std::to_string(erpc::kBaseSmUdpPort)).c_str(), dstRpcIdx);
         return session_id;
     } else {
         return iter->second;
@@ -183,13 +182,13 @@ inline int FastTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx,
 
 // This function assumes the message has already been copied to the
 // req_msgbuf
-bool FastTransport::SendRequestToReplica(TransportReceiver *src,
+bool FastTransport::SendRequestToServer(TransportReceiver *src,
                                         uint8_t reqType,
-                                        uint8_t replicaIdx,
+                                        uint8_t serverIdx,
                                         uint8_t dstRpcIdx,
                                         size_t msgLen) {
-    ASSERT(replicaIdx < config.n);
-    int session_id = GetSession(src, replicaIdx, dstRpcIdx);
+    ASSERT(serverIdx < config.n);
+    int session_id = GetSession(src, serverIdx, dstRpcIdx);
 
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
@@ -206,17 +205,17 @@ bool FastTransport::SendRequestToReplica(TransportReceiver *src,
     return true;
 }
 
-// Sends to all replicas except if the sender is a replica,
-// it doesn't send to the sending replica
-bool FastTransport::SendRequestToAll(TransportReceiver *src,
+// Sends request to all servers in the configuration, except if the sender is
+// one of those servers (as opposed to a client), it doesn't send to itself
+bool FastTransport::SendRequestToAllServers(TransportReceiver *src,
                                     uint8_t reqType,
                                     uint8_t dstRpcIdx,
                                     size_t msgLen) {
     c->rpc->resize_msg_buffer(&c->client.crt_req_tag->req_msgbuf, msgLen);
 
     for (int i = 0; i < config.n; i++) {
-        // skip the sending replica
-        if (this->replicaIdx == i) continue;
+        // skip the sending entity
+        if (this->serverIdx == i) continue;
         int session_id = GetSession(src, i, dstRpcIdx);
 
         if (i == config.n - 1) {
@@ -243,7 +242,7 @@ bool FastTransport::SendRequestToAll(TransportReceiver *src,
                                     reinterpret_cast<void *>(rt));
         }
     }
-    if (this->replicaIdx == config.n - 1) {
+    if (this->serverIdx == config.n - 1) {
         // TODO: free the current buffer
     }
 
@@ -281,130 +280,130 @@ bool FastTransport::SendResponse(size_t msgLen) {
 
 void FastTransport::Run() {
     while(!stop) {
-        // if (replicaIdx == -1)
+        // if (serverIdx == -1)
         //    event_base_loop(eventBase, EVLOOP_ONCE|EVLOOP_NONBLOCK);
         c->rpc->run_event_loop_once();
     }
 }
 
-int FastTransport::Timer(uint64_t ms, timer_callback_t cb) {
-    FastTransportTimerInfo *info = new FastTransportTimerInfo();
-
-    struct timeval tv;
-    tv.tv_sec = ms/1000;
-    tv.tv_usec = (ms % 1000) * 1000;
-
-    timers_lock.lock();
-    uint64_t t_id = lastTimerId;
-    lastTimerId++;
-    timers_lock.unlock();
-
-    info->transport = this;
-    info->id = t_id;
-    info->cb = cb;
-    info->ev = event_new(eventBase, -1, 0,
-                         TimerCallback, info);
-
-    if (info->ev == NULL) {
-        Debug("Error creating new Timer event : %lu", t_id);
-    }
-
-    timers_lock.lock();
-    timers[info->id] = info;
-    timers_lock.unlock();
-
-    int ret = event_add(info->ev, &tv);
-    if (ret != 0) {
-        Debug("Error adding new Timer event to eventbase %lu", t_id);
-    }
-    
-    return info->id;
-}
-
-bool FastTransport::CancelTimer(int id)
-{
-    FastTransportTimerInfo *info = timers[id];
-
-    if (info == NULL) {
-         return false;
-    }
-
-    event_del(info->ev);
-    event_free(info->ev);
-
-    timers_lock.lock();
-    timers.erase(info->id);
-    timers_lock.unlock();
-
-    delete info;
-    
-    return true;
-}
-
-void FastTransport::CancelAllTimers() {
-    Debug("Cancelling all Timers");
-    while (!timers.empty()) {
-        auto kv = timers.begin();
-        CancelTimer(kv->first);
-    }
-}
-
-void FastTransport::OnTimer(FastTransportTimerInfo *info) {
-    timers_lock.lock();
-    timers.erase(info->id);
-    timers_lock.unlock();
-
-    event_del(info->ev);
-    event_free(info->ev);
-
-    info->cb();
-
-    delete info;
-}
-
-void FastTransport::TimerCallback(evutil_socket_t fd, short what, void *arg) {
-    FastTransport::FastTransportTimerInfo *info =
-        (FastTransport::FastTransportTimerInfo *)arg;
-
-    ASSERT(what & EV_TIMEOUT);
-
-    info->transport->OnTimer(info);
-}
-
-void FastTransport::LogCallback(int severity, const char *msg) {
-    Message_Type msgType;
-    switch (severity) {
-    case _EVENT_LOG_DEBUG:
-        msgType = MSG_DEBUG;
-        break;
-    case _EVENT_LOG_MSG:
-        msgType = MSG_NOTICE;
-        break;
-    case _EVENT_LOG_WARN:
-        msgType = MSG_WARNING;
-        break;
-    case _EVENT_LOG_ERR:
-        msgType = MSG_WARNING;
-        break;
-    default:
-        NOT_REACHABLE();
-    }
-
-    _Message(msgType, "libevent", 0, NULL, "%s", msg);
-}
-
-void FastTransport::FatalCallback(int err) {
-    Panic("Fatal libevent error: %d", err);
-}
-
-void FastTransport::SignalCallback(evutil_socket_t fd,
-      short what, void *arg) {
-    Notice("Terminating on SIGTERM/SIGINT");
-    FastTransport *transport = (FastTransport *)arg;
-    //event_base_loopbreak(libeventBase);
-    transport->Stop();
-}
-
+//int FastTransport::Timer(uint64_t ms, timer_callback_t cb) {
+//    FastTransportTimerInfo *info = new FastTransportTimerInfo();
+//
+//    struct timeval tv;
+//    tv.tv_sec = ms/1000;
+//    tv.tv_usec = (ms % 1000) * 1000;
+//
+//    timers_lock.lock();
+//    uint64_t t_id = lastTimerId;
+//    lastTimerId++;
+//    timers_lock.unlock();
+//
+//    info->transport = this;
+//    info->id = t_id;
+//    info->cb = cb;
+//    info->ev = event_new(eventBase, -1, 0,
+//                         TimerCallback, info);
+//
+//    if (info->ev == NULL) {
+//        Debug("Error creating new Timer event : %lu", t_id);
+//    }
+//
+//    timers_lock.lock();
+//    timers[info->id] = info;
+//    timers_lock.unlock();
+//
+//    int ret = event_add(info->ev, &tv);
+//    if (ret != 0) {
+//        Debug("Error adding new Timer event to eventbase %lu", t_id);
+//    }
+//    
+//    return info->id;
+//}
+//
+//bool FastTransport::CancelTimer(int id)
+//{
+//    FastTransportTimerInfo *info = timers[id];
+//
+//    if (info == NULL) {
+//         return false;
+//    }
+//
+//    event_del(info->ev);
+//    event_free(info->ev);
+//
+//    timers_lock.lock();
+//    timers.erase(info->id);
+//    timers_lock.unlock();
+//
+//    delete info;
+//    
+//    return true;
+//}
+//
+//void FastTransport::CancelAllTimers() {
+//    Debug("Cancelling all Timers");
+//    while (!timers.empty()) {
+//        auto kv = timers.begin();
+//        CancelTimer(kv->first);
+//    }
+//}
+//
+//void FastTransport::OnTimer(FastTransportTimerInfo *info) {
+//    timers_lock.lock();
+//    timers.erase(info->id);
+//    timers_lock.unlock();
+//
+//    event_del(info->ev);
+//    event_free(info->ev);
+//
+//    info->cb();
+//
+//    delete info;
+//}
+//
+//void FastTransport::TimerCallback(evutil_socket_t fd, short what, void *arg) {
+//    FastTransport::FastTransportTimerInfo *info =
+//        (FastTransport::FastTransportTimerInfo *)arg;
+//
+//    ASSERT(what & EV_TIMEOUT);
+//
+//    info->transport->OnTimer(info);
+//}
+//
+//void FastTransport::LogCallback(int severity, const char *msg) {
+//    Message_Type msgType;
+//    switch (severity) {
+//    case _EVENT_LOG_DEBUG:
+//        msgType = MSG_DEBUG;
+//        break;
+//    case _EVENT_LOG_MSG:
+//        msgType = MSG_NOTICE;
+//        break;
+//    case _EVENT_LOG_WARN:
+//        msgType = MSG_WARNING;
+//        break;
+//    case _EVENT_LOG_ERR:
+//        msgType = MSG_WARNING;
+//        break;
+//    default:
+//        NOT_REACHABLE();
+//    }
+//
+//    _Message(msgType, "libevent", 0, NULL, "%s", msg);
+//}
+//
+//void FastTransport::FatalCallback(int err) {
+//    Panic("Fatal libevent error: %d", err);
+//}
+//
+//void FastTransport::SignalCallback(evutil_socket_t fd,
+//      short what, void *arg) {
+//    Notice("Terminating on SIGTERM/SIGINT");
+//    FastTransport *transport = (FastTransport *)arg;
+//    //event_base_loopbreak(libeventBase);
+//    transport->Stop();
+//}
+//
 void FastTransport::Stop() {
     Debug("Stopping transport!");
     stop = true;

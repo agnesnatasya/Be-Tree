@@ -2,7 +2,7 @@
 #ifndef _NETWORK_CONFIGURATION_H_
 #define _NETWORK_CONFIGURATION_H_
 
-#include "replication/common/viewstamp.h"
+//#include "replication/common/viewstamp.h"
 
 #include <fstream>
 #include <stdbool.h>
@@ -11,7 +11,7 @@
 
 using std::string;
 
-namespace transport {
+namespace network {
 
 struct ServerAddress
 {
@@ -39,15 +39,17 @@ class Configuration
 {
 public:
     Configuration(const Configuration &c);
-    Configuration(int n, int f, std::vector<ReplicaAddress> replicas,
-                  ReplicaAddress *multicastAddress = nullptr);
+    Configuration(int n,
+//                  int f,
+                  std::vector<ServerAddress> servers,
+                  ServerAddress *multicastAddress = nullptr);
     Configuration(std::ifstream &file);
     virtual ~Configuration();
-    ReplicaAddress replica(int idx) const;
-    const ReplicaAddress *multicast() const;
-    int GetLeaderIndex(view_t view) const;
-    int QuorumSize() const;
-    int FastQuorumSize() const;
+    ServerAddress GetServerAddress(int idx) const;
+    const ServerAddress *multicast() const;
+//    int GetLeaderIndex(view_t view) const;
+//    int QuorumSize() const;
+//    int FastQuorumSize() const;
     bool operator==(const Configuration &other) const;
     inline bool operator!=(const Configuration &other) const {
         return !(*this == other);
@@ -64,21 +66,21 @@ public:
     }
 
 public:
-    int n;                      // number of replicas
-    int f;                      // number of failures tolerated
+    int n;                      // number of servers
+//    int f;                      // number of failures tolerated
 private:
-    std::vector<ReplicaAddress> replicas;
-    ReplicaAddress *multicastAddress;
+    std::vector<ServerAddress> servers;
+    ServerAddress *multicastAddress;
     bool hasMulticast;
 };
 
-}      // namespace transport
+}      // namespace network
 
 
 namespace std {
-template <> struct hash<transport::ReplicaAddress>
+template <> struct hash<transport::ServerAddress>
 {
-    size_t operator()(const transport::ReplicaAddress & x) const
+    size_t operator()(const network::ServerAddress & x) const
         {
             return hash<string>()(x.host) * 37 + hash<string>()(x.port);
         }
@@ -86,19 +88,19 @@ template <> struct hash<transport::ReplicaAddress>
 }
 
 namespace std {
-template <> struct hash<transport::Configuration>
+template <> struct hash<network::Configuration>
 {
-    size_t operator()(const transport::Configuration & x) const
+    size_t operator()(const network::Configuration & x) const
         {
             size_t out = 0;
             out = x.n * 37 + x.f;
             for (int i = 0; i < x.n; i++) {
                 out *= 37;
-                out += hash<transport::ReplicaAddress>()(x.replica(i));
+                out += hash<network::ServerAddress>()(x.GetServerAddress(i));
             }
             return out;
         }
 };
 }
 
-#endif  /* _LIB_CONFIGURATION_H_ */
+#endif  /* _NETWORK_CONFIGURATION_H_ */

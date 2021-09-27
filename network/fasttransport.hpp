@@ -1,34 +1,4 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
-/***********************************************************************
- *
- * fasttransport.h:
- *   network interface that uses eRPC message delivery
- *   and libasync
- *
- * Copyright 2021 Adriana Szekeres  <aszekeres@vmware.com>
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- **********************************************************************/
-
 #ifndef _NETWORK_FASTTRANSPORT_H_
 #define _NETWORK_FASTTRANSPORT_H_
 
@@ -155,7 +125,7 @@ public:
                   uint8_t id);
     virtual ~FastTransport();
     void Register(TransportReceiver *receiver,
-                  int replicaIdx) override;
+                  int receiverIdx) override;
     void Run();
     void Wait();
     void Stop();
@@ -163,8 +133,8 @@ public:
     //bool CancelTimer(int id) override;
     //void CancelAllTimers() override;
 
-    bool SendRequestTo(TransportReceiver *src, uint8_t reqType, uint8_t replicaIdx, uint8_t dstRpcIdx, size_t msgLen) override;
-    bool SendRequestToAll(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
+    bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint8_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
+    bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
     bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
     bool SendResponse(size_t msgLen) override;
     char *GetRequestBuf(size_t reqLen, size_t respLen) override;
@@ -187,8 +157,9 @@ private:
     // used as the RPC id, must be unique per transport thread
     uint8_t id;
 
-    // Index of the replica server
-    int serverIdx;
+    // Index of the receiver (if -1 then the receiver is a client that
+    // does not get requests, otherwise it is a server from the configuration)
+    int receiverIdx;
 
     // Nexus object
     erpc::Nexus *nexus;
@@ -212,12 +183,12 @@ private:
     timers_map timers;
     std::mutex timers_lock;
 
-    void OnTimer(FastTransportTimerInfo *info);
-    static void SocketCallback(evutil_socket_t fd, short what, void *arg);
-    static void TimerCallback(evutil_socket_t fd, short what, void *arg);
-    static void LogCallback(int severity, const char *msg);
-    static void FatalCallback(int err);
-    static void SignalCallback(evutil_socket_t fd, short what, void *arg);
+//    void OnTimer(FastTransportTimerInfo *info);
+//    static void SocketCallback(evutil_socket_t fd, short what, void *arg);
+//    static void TimerCallback(evutil_socket_t fd, short what, void *arg);
+//    static void LogCallback(int severity, const char *msg);
+//    static void FatalCallback(int err);
+//    static void SignalCallback(evutil_socket_t fd, short what, void *arg);
 };
 
 // A basic session management handler that expects successful responses

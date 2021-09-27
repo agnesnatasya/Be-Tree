@@ -142,8 +142,9 @@ define add-LDFLAGS
 $(foreach bin,$(1),$(eval LDFLAGS-$(bin) += $(2)))
 endef
 
+include network/Rules.mk
 include client/Rules.mk
-#include lib/Rules.mk
+include server/Rules.mk
 #include replication/common/Rules.mk
 #include replication/meerkatir/Rules.mk
 #include replication/leadermeerkatir/Rules.mk
