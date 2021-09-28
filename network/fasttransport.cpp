@@ -1,6 +1,7 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
-#include "network/configuration.h"
-#include "network/fasttransport.h"
+#include "debug/message.hpp"
+#include "debug/assert.hpp"
+#include "network/fasttransport.hpp"
 
 #include <event2/event.h>
 #include <event2/thread.h>
@@ -21,6 +22,8 @@
 
 #include <numa.h>
 #include <boost/fiber/all.hpp>
+
+namespace network {
 
 static std::mutex fasttransport_lock;
 static volatile bool fasttransport_initialized = false;
@@ -60,7 +63,7 @@ static void fasttransport_request(erpc::ReqHandle *req_handle, void *_context) {
 #endif
 }
 
-FastTransport::FastTransport(const transport::Configuration &config,
+FastTransport::FastTransport(const network::Configuration &config,
                              std::string &ip,
                              int nthreads,
                              uint8_t nr_req_types,
@@ -88,8 +91,8 @@ FastTransport::FastTransport(const transport::Configuration &config,
         evthread_use_pthreads(); // TODO: do we really need this even
                                  // when we manipulate one eventbase
                                  // per thread?
-        event_set_log_callback(LogCallback);
-        event_set_fatal_callback(FatalCallback);
+//        event_set_log_callback(LogCallback);
+//        event_set_fatal_callback(FatalCallback);
 
         // Create the event_base to schedule requests
         eventBase = event_base_new();
@@ -187,7 +190,7 @@ bool FastTransport::SendRequestToServer(TransportReceiver *src,
                                         uint8_t serverIdx,
                                         uint8_t dstRpcIdx,
                                         size_t msgLen) {
-    ASSERT(serverIdx < config.n);
+    Assert(serverIdx < config.n);
     int session_id = GetSession(src, serverIdx, dstRpcIdx);
 
     c->client.crt_req_tag->src = src;
@@ -215,7 +218,7 @@ bool FastTransport::SendRequestToAllServers(TransportReceiver *src,
 
     for (int i = 0; i < config.n; i++) {
         // skip the sending entity
-        if (this->serverIdx == i) continue;
+        if (this->receiverIdx == i) continue;
         int session_id = GetSession(src, i, dstRpcIdx);
 
         if (i == config.n - 1) {
@@ -242,7 +245,7 @@ bool FastTransport::SendRequestToAllServers(TransportReceiver *src,
                                     reinterpret_cast<void *>(rt));
         }
     }
-    if (this->serverIdx == config.n - 1) {
+    if (this->receiverIdx == config.n - 1) {
         // TODO: free the current buffer
     }
 
@@ -408,3 +411,5 @@ void FastTransport::Stop() {
     Debug("Stopping transport!");
     stop = true;
 }
+
+} // namespace network

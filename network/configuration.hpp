@@ -78,7 +78,7 @@ private:
 
 
 namespace std {
-template <> struct hash<transport::ServerAddress>
+template <> struct hash<network::ServerAddress>
 {
     size_t operator()(const network::ServerAddress & x) const
         {
@@ -93,7 +93,7 @@ template <> struct hash<network::Configuration>
     size_t operator()(const network::Configuration & x) const
         {
             size_t out = 0;
-            out = x.n * 37 + x.f;
+            out = x.n * 37;
             for (int i = 0; i < x.n; i++) {
                 out *= 37;
                 out += hash<network::ServerAddress>()(x.GetServerAddress(i));

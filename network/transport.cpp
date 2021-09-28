@@ -1,5 +1,7 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
-#include "network/transport.h"
+#include "network/transport.hpp"
+
+namespace network {
 
 TransportReceiver::~TransportReceiver(){}
 
@@ -56,3 +58,5 @@ TransportReceiver::~TransportReceiver(){}
 //{
 //    return (timerId != 0);
 //}
+
+} // namespace network
