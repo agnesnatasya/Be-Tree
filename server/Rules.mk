@@ -1,11 +1,9 @@
 d := $(dir $(lastword $(MAKEFILE_LIST)))
 
-SRCS += $(addprefix $(d), store_server.cpp main.cpp)
+SRCS += $(addprefix $(d), storage_server.cpp main.cpp)
 
-OBJS-store_server :=  $(o)store_server.o                  \
-                   $(OBJS-replication-common) $(LIB-message) \
+OBJS-storage_server :=  $(o)storage_server.o $(LIB-debug) $(LIB-configuration) $(LIB-transport) 
 
-OBJS-meerkatir-replica :=  $(o)replica.o     \
-                   $(OBJS-replication-common) $(LIB-message) \
-                   $(LIB-configuration)
+$(d)server: $(LIB-fasttransport) $(OBJS-storage_server) $(o)main.o
 
+BINS += $(d)server

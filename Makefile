@@ -144,7 +144,7 @@ endef
 include debug/Rules.mk
 include network/Rules.mk
 include client/Rules.mk
-#include server/Rules.mk
+include server/Rules.mk
 #include replication/common/Rules.mk
 #include replication/meerkatir/Rules.mk
 #include replication/leadermeerkatir/Rules.mk
