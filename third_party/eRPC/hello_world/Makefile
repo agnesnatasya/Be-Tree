@@ -19,4 +19,7 @@ dpdk:
 	g++ -g -std=c++11 -o client client.cc -I ../src -I /usr/include/dpdk -L ../build $(LIBS) -ldpdk -DDPDK=true -march=native
 clean:
 	rm server client
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8507ec00653088b1a86bb5a5e8be4ab382030c17
