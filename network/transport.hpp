@@ -2,12 +2,17 @@
 #ifndef _NETWORK_TRANSPORT_H_
 #define _NETWORK_TRANSPORT_H_
 
-#include "netwrok/configuration.h"
+#include "debug/message.hpp"
+#include "network/configuration.hpp"
 #include <functional>
+
+
 
 #define CLIENT_NETWORK_DELAY 0
 #define REPLICA_NETWORK_DELAY 0
 #define READ_AT_LEADER 1
+
+namespace network {
 
 class TransportReceiver
 {
@@ -33,8 +38,8 @@ public:
                           int receiverIdx) = 0;
     virtual bool SendResponse(size_t msgLen) = 0;
     virtual bool SendResponse(uint64_t bufIdx, size_t msgLen) = 0;
-    virtual bool SendRequest(TransportReceiver *src, uint8_t reqType, uint8_t receiverIdx, uint8_t coreIdx, size_t msgLen) = 0;
-    virtual bool SendRequestToAll(TransportReceiver *src, uint8_t reqType, uint8_t coreIdx, size_t msgLen) = 0;
+    virtual bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint8_t serverIdx, uint8_t coreIdx, size_t msgLen) = 0;
+    virtual bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t coreIdx, size_t msgLen) = 0;
     //virtual int Timer(uint64_t ms, timer_callback_t cb) = 0;
     //virtual bool CancelTimer(int id) = 0;
     //virtual void CancelAllTimers() = 0;
@@ -63,5 +68,7 @@ public:
 //    timer_callback_t cb;
 //    int timerId;
 //};
+
+} // namespace network
 
 #endif  // _NETWORK_TRANSPORT_H_

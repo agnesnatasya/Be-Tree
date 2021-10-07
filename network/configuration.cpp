@@ -1,5 +1,6 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
-#include "network/configuration.h"
+#include "network/configuration.hpp"
+#include "debug/message.hpp"
 
 #include <cstring>
 #include <stdexcept>
@@ -27,7 +28,7 @@ ServerAddress::operator<(const ServerAddress &other) const {
 }
 
 Configuration::Configuration(const Configuration &c)
-    : n(c.n), f(c.f), servers(c.servers), hasMulticast(c.hasMulticast)
+    : n(c.n), servers(c.servers), hasMulticast(c.hasMulticast)
 {
     multicastAddress = NULL;
     if (hasMulticast) {
@@ -96,7 +97,7 @@ Configuration::Configuration(std::ifstream &file)
             string host = line.substr(t2, t3-t2);
             string port = line.substr(t3+1, string::npos);
 
-            servers.push_back(ReplicaAddress(host, port));
+            servers.push_back(ServerAddress(host, port));
 //        } else if (strcasecmp(cmd.c_str(), "multicast") == 0) {
 //            unsigned int t2 = line.find_first_not_of(" \t", t1);
 //            if (t2 == string::npos) {

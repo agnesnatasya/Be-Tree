@@ -2,8 +2,8 @@
 #ifndef _NETWORK_FASTTRANSPORT_H_
 #define _NETWORK_FASTTRANSPORT_H_
 
-#include "network/configuration.h"
-#include "network/transport.h"
+#include "network/configuration.hpp"
+#include "network/transport.hpp"
 
 #include "rpc.h"
 #include "rpc_constants.h"
@@ -24,6 +24,8 @@
 #include <netinet/in.h>
 
 #include <boost/unordered_map.hpp>
+
+namespace network {
 
 // This would make fast transport to maintain a map of request handles
 // and send response to the indicated one
@@ -116,7 +118,7 @@ class AppContext {
 class FastTransport : public Transport
 {
 public:
-    FastTransport(const transport::Configuration &config,
+    FastTransport(const network::Configuration &config,
                   std::string &ip,
                   int nthreads,
                   uint8_t nr_req_types,
@@ -143,7 +145,7 @@ public:
     uint8_t GetID() override { return id; };
 private:
     // Configuration containing the ids of the servers
-    transport::Configuration config;
+    network::Configuration config;
 
     // The port of the fast NIC
     uint8_t phy_port;
@@ -212,5 +214,7 @@ static void basic_sm_handler(int session_num, erpc::SmEventType sm_event_type,
             erpc::sm_err_type_str(sm_err_type).c_str(),
             c->rpc->sec_since_creation());
 }
+
+} // namespace network
 
 #endif  // _NETWORK_FASTTRANSPORT_H_

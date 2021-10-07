@@ -8,10 +8,9 @@ LD = g++
 EXPAND = lib/tmpl/expand
 
 ERPC_PATH= "./third_party/eRPC"
-#ERPC_PATH= "/biggerraid/users/aaasz/eRPC"
 
-#ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
-#ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
+ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
+ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
 
 #ERPC_CFLAGS_DPDK := -I $(ERPC_PATH)/src -I /usr/include/dpdk -DDPDK=true -march=native
 #ERPC_LDFLAGS_DPDK := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -ldpdk
@@ -27,8 +26,8 @@ CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 
 ## Add ERPC flags ##
-#CFLAGS += $(ERPC_CFLAGS_RAW)
-#LDFLAGS += $(ERPC_LDFLAGS_RAW)
+CFLAGS += $(ERPC_CFLAGS_RAW)
+LDFLAGS += $(ERPC_LDFLAGS_RAW)
 
 ## Debian package: check ##
 #CHECK_CFLAGS := $(shell pkg-config --cflags check)
@@ -142,6 +141,7 @@ define add-LDFLAGS
 $(foreach bin,$(1),$(eval LDFLAGS-$(bin) += $(2)))
 endef
 
+include debug/Rules.mk
 include network/Rules.mk
 include client/Rules.mk
 include server/Rules.mk

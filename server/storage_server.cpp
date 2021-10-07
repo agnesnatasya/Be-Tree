@@ -9,9 +9,20 @@
 
 using namespace std;
 
-StorageServer::StorageServer(transport::Configuration config, int myIdx,
-                     Transport *transport)
-    : config(std::move(config)), myIdx(myIdx), transport(transport) {
+StorageServerApp::StorageServerApp() : current_id(0) {
+
+}
+
+uint32_t StorageServerApp::GetNodeId() {
+   return current_id++;
+}
+
+StorageServer::StorageServer(network::Configuration config, int myIdx,
+                     network::Transport *transport,
+                     StorageServerApp *storageApp)
+    : config(std::move(config)), myIdx(myIdx), transport(transport),
+      storageApp(storageApp)
+{
     if (transport != NULL) {
         transport->Register(this, myIdx);
     } else {
@@ -25,7 +36,7 @@ StorageServer::~StorageServer() { }
 void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf) {
     size_t respLen;
     switch(reqType) {
-        case getNodeIdType:
+        case getNodeIdReqType:
             HandleGetNodeId(reqBuf, respBuf, respLen);
             break;
         default:
@@ -38,9 +49,9 @@ void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf)
 }
 
 void StorageServer::HandleGetNodeId(char *reqBuf, char *respBuf, size_t &respLen) {
-    auto *req = reinterpret_cast<inconsistent_request_t *>(reqBuf);
+    auto *req = reinterpret_cast<nodeid_request_t *>(reqBuf);
     auto *resp = reinterpret_cast<nodeid_response_t *>(respBuf);
     resp->req_nr = req->req_nr;
-    resp->id = 3;
+    resp->id = storageApp->GetNodeId();
     respLen = sizeof(nodeid_response_t);
 }

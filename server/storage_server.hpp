@@ -9,14 +9,26 @@
 #define _STORAGE_SERVER_H_
 
 #include "network/configuration.hpp"
-#include "network/fasttransport.hpp"
+#include "network/transport.hpp"
 
-
-class StorageServer : TransportReceiver
+class StorageServerApp
 {
   public:
-    StorageServer(transport::Configuration config, int myIdx,
-              Transport *transport);
+    StorageServerApp();
+    virtual ~StorageServerApp() { };
+
+    uint32_t GetNodeId();
+
+  private:
+    uint32_t current_id;
+};
+
+class StorageServer : network::TransportReceiver
+{
+  public:
+    StorageServer(network::Configuration config, int myIdx,
+              network::Transport *transport,
+              StorageServerApp *storageApp);
     ~StorageServer();
 
     // Message handlers.
@@ -29,10 +41,11 @@ class StorageServer : TransportReceiver
     void HandleGetNodeId(char *reqBuf, char *respBuf, size_t &respLen);
 
   private:
-    transport::Configuration config;
+    network::Configuration config;
     int myIdx; // Server index into config.
-    Transport *transport;
+    network::Transport *transport;
 
+    StorageServerApp * storageApp;
 };
 
 #endif /* _STORAGE_SERVER_H_ */
