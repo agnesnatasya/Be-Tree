@@ -135,7 +135,7 @@ public:
     //bool CancelTimer(int id) override;
     //void CancelAllTimers() override;
 
-    bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint8_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
+    bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
     bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
     bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
     bool SendResponse(size_t msgLen) override;

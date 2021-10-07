@@ -2,20 +2,25 @@
 #ifndef _STORAGE_CLIENT_H_
 #define _STORAGE_CLIENT_H_
 
-#include "network/fasttransport.h"
-#include "network/configuration.h"
+#include "network/fasttransport.hpp"
+#include "network/configuration.hpp"
 
+struct nodeid_t {
+    uint32_t serverIdx;
+    uint32_t coreIdx;
+    uint32_t nodeIdx;
+};
 
-class StorageClient : public TransportReceiver
+class StorageClient : public network::TransportReceiver
 {
   public:
-    StorageClient(const transport::Configuration &config,
-             Transport *transport,
+    StorageClient(const network::Configuration &config,
+             network::Transport *transport,
              uint64_t clientid = 0);
     virtual ~StorageClient();
 
     // All RPCs this client can invoke
-    virtual void InvokeGetNodeId(uint8_t core_id, int serverIdx, const string &request);
+    virtual nodeid_t GetNodeId(uint8_t coreIdx, uint32_t serverIdx, const string &request);
 
     // Inherited from TransportReceiver
     void ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf) override { PPanic("Not implemented."); };
@@ -35,6 +40,9 @@ protected:
 
     // Handlers for replies to the RPC calls
     void HandleGetNodeIdReply(char *respBuf);
+
+    nodeid_t nodeIdReply;
+
 };
 
 #endif  /* _STORAGE_CLIENT_H_ */

@@ -187,7 +187,7 @@ inline int FastTransport::GetSession(TransportReceiver *src, uint8_t serverIdx, 
 // req_msgbuf
 bool FastTransport::SendRequestToServer(TransportReceiver *src,
                                         uint8_t reqType,
-                                        uint8_t serverIdx,
+                                        uint32_t serverIdx,
                                         uint8_t dstRpcIdx,
                                         size_t msgLen) {
     Assert(serverIdx < config.n);

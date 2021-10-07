@@ -38,7 +38,7 @@ public:
                           int receiverIdx) = 0;
     virtual bool SendResponse(size_t msgLen) = 0;
     virtual bool SendResponse(uint64_t bufIdx, size_t msgLen) = 0;
-    virtual bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint8_t serverIdx, uint8_t coreIdx, size_t msgLen) = 0;
+    virtual bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t coreIdx, size_t msgLen) = 0;
     virtual bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t coreIdx, size_t msgLen) = 0;
     //virtual int Timer(uint64_t ms, timer_callback_t cb) = 0;
     //virtual bool CancelTimer(int id) = 0;
