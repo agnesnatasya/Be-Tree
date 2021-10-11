@@ -84,6 +84,10 @@ endif
 # Tracing
 #
 
+# Specify V=1 if you want it to be verbose
+# Why is trace defined as = instead of :=
+# Is it because it's like a function so it doesn't matter
+
 ifeq ($(V),1)
 trace = $(3)
 Q =
@@ -91,6 +95,7 @@ else
 trace = @printf "+ %-6s " $(1) ; echo $(2) ; $(3)
 Q = @
 endif
+
 GTEST := .obj/gtest/gtest.a
 GTEST_MAIN := .obj/gtest/gtest_main.a
 
@@ -131,6 +136,12 @@ TEST_BINS :=
 # source.  This should be used like
 #
 #  $(call add-CFLAGS,$(d)a.c $(d)b.c,$(PG_CFLAGS))
+# The first argument for (call add-CFLAGS) will be the $(1)
+# https://www.gnu.org/software/make/manual/html_node/Foreach-Function.html
+# https://www.gnu.org/software/make/manual/html_node/Eval-Function.html#Eval-Function
+
+# After calling this, it will be like 
+# CFLAGS-filename = the second argument to the (call add-CFLAGS)
 define add-CFLAGS
 $(foreach src,$(1),$(eval CFLAGS-$(src) += $(2)))
 endef
@@ -176,10 +187,16 @@ include server/Rules.mk
 # .obj directory.  -MP Add phony targets so make doesn't complain if
 # a header file is removed.  -MT Explicitly set the target in the
 # generated rule to the object file we're generating.
+# https://stackoverflow.com/questions/38220081/what-does-o-d-mean-in-a-makefile
+
 DEPFLAGS = -M -MF ${@:.o=.d} -MP -MT $@ -MG
 
 # $(call add-CFLAGS,$(TEST_SRCS),$(CHECK_CFLAGS))
+# Translation of the cpp files to its obejcts
 OBJS := $(SRCS:%.cpp=.obj/%.o) $(TEST_SRCS:%.cpp=.obj/%.o) $(GTEST_SRCS:%.cpp=.obj/%.o)
+
+# https://stackoverflow.com/questions/14300541/wildcard-in-makefile-what-does-1-mean
+# The call trace is basically setting trace the compilation progress i think
 
 define compile
 	@mkdir -p $(dir $@)
@@ -189,6 +206,10 @@ define compile
 	$(Q)$(EXPAND) $(EXPANDARGS) -o .obj/$*.i .obj/$*.t
 	$(Q)$(CC) $(CFLAGS) $(CFLAGS-$<) $(2) -c -o $@ .obj/$*.i
 endef
+
+# $@ is the target
+# $< is the first frereq
+# $(1) is the first argument after (call compilecxx, ...)
 
 define compilecxx
 	@mkdir -p $(dir $@)
@@ -204,8 +225,15 @@ endef
 # Slightly different rules for protobuf object files
 # because their source files have different locations.
 
+# https://makefiletutorial.com/#static-pattern-rules
+
 $(OBJS): .obj/%.o: %.cpp $(PROTOSRCS)
 	$(call compilecxx,CC,)
+
+# https://eli.thegreenplace.net/2011/11/03/position-independent-code-pic-in-shared-libraries/
+# https://stackoverflow.com/questions/18026333/what-does-compiling-with-pic-dwith-pic-with-pic-actually-do
+
+# Why does this one use the .cc while the above use the .cpp??
 
 $(OBJS:%.o=%-pic.o): .obj/%-pic.o: %.cc $(PROTOSRCS)
 	$(call compilecxx,CCPIC,-fPIC)
@@ -222,6 +250,8 @@ $(PROTOOBJS:%.o=%-pic.o): .obj/%-pic.o: .obj/gen/%.pb.cc $(PROTOSRCS)
 
 $(call add-LDFLAGS,$(TEST_BINS),$(CHECK_LDFLAGS))
 
+# This means that it depends on everything? 
+# Maybe this is because the binaries can only be built when everything is available
 $(BINS) $(TEST_BINS): %:
 	$(call trace,LD,$@,$(LD) -o $@ $^ $(LDFLAGS) $(LDFLAGS-$@))
 
@@ -231,6 +261,7 @@ $(BINS) $(TEST_BINS): %:
 
 DEPS := $(OBJS:.o=.d) $(OBJS:.o=-pic.d)
 
+# Include the dependencies but ignore if anything deos not exist, don't raise error
 -include $(DEPS)
 
 #
@@ -268,7 +299,10 @@ print-%:
 #
 
 .PHONY: all
-all: $(BINS)
+all: 
+	$(BINS)
+
+# I think you don't call these target, you call the `make test` then it will call this
 
 $(TEST_BINS:%=run-%): run-%: %
 	$(call trace,RUN,$<,$<)
@@ -276,11 +310,14 @@ $(TEST_BINS:%=run-%): run-%: %
 $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
+# Why are they doing the same thing here?
+
 .PHONY: test
 test: $(TEST_BINS:%=run-%)
 .PHONY: check
 check: test
 
+# https://www.tutorialspoint.com/unix_commands/etags.htm#:~:text=The%20etags%20program%20is%20used,understood%20by%20vi(1)%20.
 .PHONY: TAGS
 TAGS:
 	$(Q)rm -f $@
@@ -289,3 +326,4 @@ TAGS:
 	$(call trace,ETAGS,headers,\
 	  etags -a $(foreach dir,$(sort $(dir $(SRCS) $(TEST_SRCS))),\
 		     $(wildcard $(dir)*.h)))
+
