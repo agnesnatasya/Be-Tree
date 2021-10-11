@@ -84,9 +84,10 @@ RPC options:
 
 #### Setup
 1. Build grpc
-
-    Reference: https://grpc.io/docs/languages/cpp/quickstart/
-
+* Reference: https://grpc.io/docs/languages/cpp/quickstart/
+* Important:
+    * Don't use `make -j`, use `make` instead. It might cause OOM error
+    * Use `sudo make install` instead of `make install`
 2. Link grpc in the Makefile
 3. Change the server and client RPC handlers
 4. Run 
