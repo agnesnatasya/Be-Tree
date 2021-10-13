@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package betree;
+
+// The storage service definition.
+service Storage {
+  // Sends a greeting
+  rpc GetNodeId () returns (NodeIdReply) {}
+}
+
+// The request message
+message NodeIdRequest {
+  uint64 req_nr;
+}
+
+// The response message containing the node id
+message NodeIdReply {
+  uint64 req_nr;
+  uint64 id;
+}
