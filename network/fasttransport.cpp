@@ -76,9 +76,17 @@ FastTransport::FastTransport(const network::Configuration &config,
       numa_node(numa_node),
       id(id) {
 
+    if (numa_available() == -1)
+    {
+        PPanic("NUMA library not available.");
+    }
+
     Assert(numa_node <=  numa_max_node());
 
     c = new AppContext();
+
+    // https://community.mellanox.com/s/article/understanding-numa-node-for-performance-benchmarks
+    erpc::bind_to_core(thread_arr[i], numa_node, idx);
 
     // The first thread to grab the lock initializes the transport
     fasttransport_lock.lock();
