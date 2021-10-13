@@ -83,11 +83,19 @@ RPC options:
 * Less hardware setup is needed
 
 #### Setup
-1. Build grpc
+From gRPC documentation, 
+```
+If your project does not use CMake (e.g. you're using make directly), you can first install gRPC C++ using CMake, and have your non-CMake project rely on the pkgconfig files which are provided by gRPC installation. Example
+```
+Because the project uses Make at the moment, we need to build gRPC using CMake first, and rely on pkgconfig afterwards. 
+
+1. Build and install grpc
 * Reference: https://grpc.io/docs/languages/cpp/quickstart/
 * Important:
     * Don't use `make -j`, use `make` instead. It might cause OOM error
     * Use `sudo make install` instead of `make install`
+* This step builds the grpc library `grpc/cmake/build` and also installs it in `~/.grpc_local` or $CMAKE_INSTALL_DIR
+    * Reference: https://unix.stackexchange.com/questions/152346/what-is-the-difference-between-building-from-source-and-using-an-install-package
 2. Link grpc in the Makefile
 3. Change the server and client RPC handlers
 4. Run 
