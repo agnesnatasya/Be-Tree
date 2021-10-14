@@ -27,7 +27,8 @@ using grpc::Status;
 using namespace std;
 string const RPC = "G";
 
-class StorageChannel {}
+// Implmentation of the client's stub implementation
+class StorageClientStub {}
 
 void client_thread_func()
 {
@@ -42,15 +43,15 @@ void client_thread_func()
     }
     else if (RPC == "G")
     {
-        StorageChannel channel(grpc::CreateChannel(
+        StorageClientStub client_stub(grpc::CreateChannel(
             "localhost:50051", grpc::InsecureChannelCredentials()));
 
         // Spawn reader thread that loops indefinitely
-        std::thread thread_ = std::thread(&StorageChannel::AsyncCompleteRpc, &channel);
+        std::thread thread_ = std::thread(&StorageClientStub::AsyncCompleteRpc, &client_stub);
 
         for (int i = 0; i < 100; i++)
         {
-            channel.GetNodeId();
+            client_stub.GetNodeId();
         }
 
         thread_.join(); // blocks forever
