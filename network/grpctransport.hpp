@@ -36,8 +36,6 @@ namespace network
                         std::string &ip,
                         int nthreads,
                         uint8_t nr_req_types,
-                        uint8_t phy_port,
-                        uint8_t numa_node,
                         uint8_t id);
         virtual ~GrpcTransport();
         void Register(TransportReceiver *receiver,
@@ -45,9 +43,6 @@ namespace network
         void Run();
         void Wait();
         void Stop();
-        //int Timer(uint64_t ms, timer_callback_t cb) override;
-        //bool CancelTimer(int id) override;
-        //void CancelAllTimers() override;
 
         bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
         bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
