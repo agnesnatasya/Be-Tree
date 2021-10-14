@@ -14,7 +14,7 @@
 #include <boost/thread/thread.hpp>
 
 using namespace std;
-string const RPC = "G"
+string const RPC = "G";
 
 uint8_t get_numa_node(uint8_t thread_id) {
     // TODO: provide mapping function from thread_id to numa_node
@@ -45,6 +45,7 @@ void server_thread_func(StorageServerApp *storageApp,
     }
     else if (RPC == "G"){
         // TODO: Instantiate transport object for gRPC
+
     }
 
     StorageServer *ss = new StorageServer(config, FLAGS_serverIndex, transport, storageApp);
