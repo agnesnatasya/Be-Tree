@@ -1,3 +1,11 @@
+# GRPC Integration
+
+This branch is an effort to integrate gRPC library to the code, such that the user can choose which RPC library to use, eRPC or gRPC. 
+
+This branch does not work / make sense because gRPC is at a higher level of abstraction compared to the Transport class. 
+
+This is part of Agnes' FYP week 9 task. 
+
 ## Code
 ### client/
 The original Be-Tree code
