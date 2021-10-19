@@ -44,6 +44,8 @@ public:
     //virtual bool CancelTimer(int id) = 0;
     //virtual void CancelAllTimers() = 0;
 
+    // Use this to achieve zero copy
+    // You do 
     virtual char *GetRequestBuf(size_t reqLen, size_t respLen) = 0;
     virtual int GetSession(TransportReceiver *src, uint8_t receiverIdx, uint8_t dstRpcIdx) = 0;
 

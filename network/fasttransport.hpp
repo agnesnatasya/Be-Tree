@@ -1,4 +1,9 @@
 // -*- mode: c++; c-file-style: "k&r"; c-basic-offset: 4 -*-
+/**
+ * RPC stub for eRPC protocol
+ * Handles buffering and async calls
+ */
+
 #ifndef _NETWORK_FASTTRANSPORT_H_
 #define _NETWORK_FASTTRANSPORT_H_
 
@@ -115,6 +120,7 @@ class AppContext {
         erpc::Rpc<erpc::CTransport> *rpc = nullptr;
 };
 
+// RPC stub for eRPC protocol
 class FastTransport : public Transport
 {
 public:
