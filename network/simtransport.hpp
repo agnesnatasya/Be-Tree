@@ -38,8 +38,6 @@
 #include <map>
 #include <deque>
 
-#include <boost/unordered_map.hpp>
-
 #define MULTIPLE_ACTIVE_REQUESTS false
 
 typedef void (*sim_rpc_cont_func_t)(void *context, void *tag);
@@ -75,13 +73,12 @@ namespace network
 
         void enqueue_request(sim_req_tag_t req_tag)
         {
-            req_queue.push(req_tag);
+            req_queue.push_back(req_tag);
         }
 
         private:
             std::deque<sim_req_tag_t> req_queue;
-    }
-
+    };
 
     class SimAppContext
     {
@@ -96,7 +93,7 @@ namespace network
                 sim_req_tag_t *crt_req_tag;
 
                 // Request tags used for RPCs exchanged with the servers
-                AppMemPool<req_tag_t> req_tag_pool;
+                AppMemPool<sim_req_tag_t> req_tag_pool;
 
             } client;
 
