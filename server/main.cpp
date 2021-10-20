@@ -7,8 +7,15 @@
 #include <csignal>
 #include <numa.h>
 
+#include "network/transport_config.hpp"
 #include "network/configuration.hpp"
+
+#if IS_DEV
+#include "network/simtransport.hpp"
+#else
 #include "network/fasttransport.hpp"
+#endif
+
 #include "common/gflags.hpp"
 #include "storage_server.hpp"
 

@@ -49,6 +49,7 @@ sudo apt install libssl-dev
 sudo apt install libevent-dev
 sudo apt install libboost-all-dev
 sudo apt install libgtest-dev
+sudo apt-get install libgflags-dev
 make
 ```
 
@@ -90,7 +91,7 @@ RPC options:
 * Client and server can run on the same machine on different ports
 
 #### Setup
-
+1. Set -DIS_DEV in Makefile
 ## Run
 --configFile=config --replicaIndex=0 or 1
 

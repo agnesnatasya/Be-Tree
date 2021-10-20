@@ -2,7 +2,12 @@
 #ifndef _STORAGE_CLIENT_H_
 #define _STORAGE_CLIENT_H_
 
+#if IS_DEV
+#include "network/simtransport.hpp"
+#else
 #include "network/fasttransport.hpp"
+#endif
+
 #include "network/configuration.hpp"
 
 struct nodeid_t {
