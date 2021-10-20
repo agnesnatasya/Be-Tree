@@ -27,8 +27,6 @@
  * SOFTWARE.
  *
  **********************************************************************/
-#ifndef _NETWORK_SIMTRANSPORT_H_
-#define _NETWORK_SIMTRANSPORT_H_
 
 #include "network/simtransport.hpp"
 
@@ -84,7 +82,7 @@ namespace network
     }
 
     int SimulatedTransport::MAX_DATA_PER_PKT = 16384;
-    
+
     // Used when the client wants to create a request
     char SimulatedTransport::*
     GetRequestBuf(size_t reqLen, size_t respLen)
@@ -174,5 +172,3 @@ namespace network
         return true;
     }
 }
-
-#endif // _NETWORK_SIMTRANSPORT_H_
