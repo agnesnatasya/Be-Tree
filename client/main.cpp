@@ -27,17 +27,8 @@ class StorageClientStub
 {
 }
 
-void
-client_thread_func()
+void client_thread_func()
 {
-    std::string local_uri = config.GetServerAddress(FLAGS_serverIndex).host;
-    // TODO: get rid of the hardcoded number of request types
-
-    network::Transport;
-    if (FLAGS_serverIndex)
-    {
-        // TODO: Connect to simulated transport
-    }
     
 }
 
