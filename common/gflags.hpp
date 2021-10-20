@@ -5,6 +5,7 @@
 
 // Defines all the command line flags shared between both
 // severs and clients
+DEFINE_string(isDev, false, "Flag whether this is development environment");
 DEFINE_string(configFile, "", "Path to the configuration file");
 DEFINE_int32(serverIndex, -1, "Index of the server in the config file");
 DEFINE_string(keysFile, "", "Path to the keys file");
