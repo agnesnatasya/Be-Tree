@@ -35,13 +35,6 @@ void client_thread_func()
 int main(int argc, char **argv)
 {
 
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
-
-    if (FLAGS_isDev == "")
-    {
-        FLAGS_isDev = false;
-    }
-
     client_thread_func();
 
     return 0;
