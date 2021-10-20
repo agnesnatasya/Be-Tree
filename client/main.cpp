@@ -20,17 +20,6 @@
 
 #include <boost/thread/thread.hpp>
 
-// Generated class by proto
-using betree::GetNodeIdReply;
-using betree::GetNodeIdRequest;
-using betree::Storage;
-using grpc::Server;
-using grpc::ServerAsyncResponseWriter;
-using grpc::ServerBuilder;
-using grpc::ServerCompletionQueue;
-using grpc::ServerContext;
-using grpc::Status;
-
 using namespace std;
 
 // Implmentation of the client's stub implementation
