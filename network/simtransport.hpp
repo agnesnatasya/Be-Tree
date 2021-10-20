@@ -42,19 +42,19 @@
 
 typedef void (*sim_rpc_cont_func_t)(void *context, void *tag);
 
-// A tag attached to every request we send;
-// it is passed to the response function
-struct sim_req_tag_t
-{
-    char* req_msgbuf;
-    char* resp_msgbuf;
-    uint8_t reqType;
-    TransportReceiver *src;
-    sim_rpc_cont_func_t cont_func;
-};
-
 namespace network
 {
+    // A tag attached to every request we send;
+    // it is passed to the response function
+    struct sim_req_tag_t
+    {
+        char *req_msgbuf;
+        char *resp_msgbuf;
+        uint8_t reqType;
+        TransportReceiver *src;
+        sim_rpc_cont_func_t cont_func;
+    };
+
     class SimRpc {
 
         void free_msg_buffer(sim_req_tag_t req_tag)
