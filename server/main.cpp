@@ -7,8 +7,8 @@
 #include <csignal>
 #include <numa.h>
 
-#include "network/transport_config.hpp"
 #include "network/configuration.hpp"
+#include "network/transport.hpp"
 
 #if IS_DEV
 #include "network/simtransport.hpp"
