@@ -11,7 +11,7 @@ IS_DEV = 1
 ifeq ($(IS_DEV),1)
 RPC_PATH= 
 RPC_CFLAGS_RAW := 
-RPC_LDFLAGS_RAW := -ldl -lgflags
+RPC_LDFLAGS_RAW := -ldl -lgflags  -libverbs
 else
 RPC_PATH= "./third_party/eRPC"
 RPC_CFLAGS_RAW := -I $(RPC_PATH)/src -DRAW=true
