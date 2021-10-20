@@ -7,7 +7,14 @@
 #include <csignal>
 
 #include "network/configuration.hpp"
-#include "network/grpctransport.hpp"
+#include "network/transport.hpp"
+
+#if IS_DEV
+#include "network/simtransport.hpp"
+#else
+#include "network/fasttransport.hpp"
+#endif
+
 #include "common/gflags.hpp"
 #include "storage_client.hpp"
 

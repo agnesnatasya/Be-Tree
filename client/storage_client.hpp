@@ -5,12 +5,6 @@
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
 
-#if IS_DEV
-#include "network/simtransport.hpp"
-#else
-#include "network/fasttransport.hpp"
-#endif
-
 struct nodeid_t {
     uint32_t serverIdx;
     uint32_t coreIdx;
