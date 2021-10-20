@@ -2,14 +2,13 @@
 #ifndef _STORAGE_CLIENT_H_
 #define _STORAGE_CLIENT_H_
 
+#include "network/configuration.hpp"
+
 #if IS_DEV
-#warning "C++ Preprocessor got here!".
 #include "network/simtransport.hpp"
 #else
 #include "network/fasttransport.hpp"
 #endif
-
-#include "network/configuration.hpp"
 
 struct nodeid_t {
     uint32_t serverIdx;

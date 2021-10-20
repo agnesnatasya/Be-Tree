@@ -33,6 +33,7 @@
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
+#include "network/app_mem_pool.cpp"
 
 #include <map>
 #include <deque>
@@ -59,7 +60,7 @@ namespace network
         void free_msg_buffer(sim_req_tag_t req_tag)
         {
             delete[] req_tag.req_msgbuf;
-            delete[] reg_taq.resp_msgbuf;
+            delete[] req_tag.resp_msgbuf;
         }
 
         void resize_msg_buffer(char* msgBuf, int newMsgLen) {
@@ -72,7 +73,7 @@ namespace network
 
         void enqueue_request(sim_req_tag_t req_tag)
         {
-            req_queue.append(req_tag);
+            req_queue.push(req_tag);
         }
 
         private:
@@ -83,7 +84,7 @@ namespace network
     class SimAppContext
     {
 
-        static int MAX_DATA_PER_PKT = 16384;
+        static int MAX_DATA_PER_PKT;
 
         public:
             struct
@@ -129,11 +130,6 @@ namespace network
             int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) override;
 
             uint8_t GetID() override { return id; };
-
-        protected:
-            bool SendMessageInternal(TransportReceiver *src,
-                                    const Message &m,
-                                    bool multicast);
 
         private:
             // Configuration containing the ids of the servers

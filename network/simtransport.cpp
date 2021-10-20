@@ -83,8 +83,12 @@ namespace network
         this->receiverIdx = receiverIdx;
     }
 
+    int SimulatedTransport::MAX_DATA_PER_PKT = 16384;
+    
     // Used when the client wants to create a request
-    char SimulatedTransport::*GetRequestBuf(size_t reqLen, size_t respLen) {
+    char SimulatedTransport::*
+    GetRequestBuf(size_t reqLen, size_t respLen)
+    {
         // create a new request tag
         if (reqLen == 0)
             reqLen = SimulatedTransport.MAX_DATA_PER_PKT;
