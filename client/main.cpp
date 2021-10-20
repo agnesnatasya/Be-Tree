@@ -25,7 +25,7 @@ using namespace std;
 // Implmentation of the client's stub implementation
 class StorageClientStub
 {
-}
+};
 
 void client_thread_func()
 {
