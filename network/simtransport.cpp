@@ -48,7 +48,7 @@ namespace network
 
     // Function called when the server received a request
     // (clients never receive requests, just responses)
-    static void fasttransport_request(void *_context, void *_tag)
+    static void simtransport_request(void *_context, void *_tag)
     {
         // save the req_handle for when we are in the SendMessage function
         auto *c = static_cast<SimAppContext *>(_context);

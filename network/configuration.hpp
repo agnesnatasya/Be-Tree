@@ -2,6 +2,7 @@
 #ifndef _NETWORK_CONFIGURATION_H_
 #define _NETWORK_CONFIGURATION_H_
 
+#define IS_DEV
 //#include "replication/common/viewstamp.h"
 
 #include <fstream>
