@@ -7,7 +7,8 @@ CXX = g++
 LD = g++
 EXPAND = lib/tmpl/expand
 
-ifeq ($(isDev),1)
+IS_DEV = 1
+ifeq ($(IS_DEV),1)
 RPC_PATH= "./third_party/eRPC"
 RPC_CFLAGS_RAW := -I $(RPC_PATH)/src -DRAW=true
 RPC_LDFLAGS_RAW := 
@@ -26,7 +27,7 @@ CFLAGS_WARNINGS:= -Wno-unused-function -Wno-nested-anon-types -Wno-keyword-macro
 # more information.
 #
 # [1]: http://www.brendangregg.com/perf.html#FlameGraphs
-CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-frame-pointer -DIS_DEV=1
+CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-frame-pointer -DIS_DEV=$(IS_DEV)
 CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 

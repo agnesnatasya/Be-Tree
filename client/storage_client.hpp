@@ -3,6 +3,7 @@
 #define _STORAGE_CLIENT_H_
 
 #if IS_DEV
+#warning "C++ Preprocessor got here!".
 #include "network/simtransport.hpp"
 #else
 #include "network/fasttransport.hpp"
