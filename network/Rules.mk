@@ -1,6 +1,11 @@
 d := $(dir $(lastword $(MAKEFILE_LIST)))
 
-SRCS += $(addprefix $(d), transport.cpp fasttransport.cpp configuration.cpp)
+FILES=transport.cpp configuration.cpp
+ifeq ($(IS_DEV),0)
+FILES += fasttransport.cpp
+endif
+
+SRCS += $(addprefix $(d), $(FILES))
 
 LIB-configuration := $(o)configuration.o $(LIB-debug)
 
