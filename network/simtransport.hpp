@@ -35,55 +35,123 @@
 #include "network/transport.hpp"
 
 #include <map>
+#include <deque>
+
+#include <boost/unordered_map.hpp>
+
+#define MULTIPLE_ACTIVE_REQUESTS false
+
+// A tag attached to every request we send;
+// it is passed to the response function
+struct sim_req_tag_t
+{
+    char* req_msgbuf;
+    char* resp_msgbuf;
+    uint8_t reqType;
+    TransportReceiver *src;
+    sim_rpc_cont_func_t cont_func;
+};
 
 namespace network
 {
+    class SimRpc {
+
+        void free_msg_buffer(sim_req_tag_t req_tag)
+        {
+            delete[] req_tag.req_msgbuf;
+            delete[] reg_taq.resp_msgbuf;
+        }
+
+        void resize_msg_buffer(char* msgBuf, int newMsgLen) {
+            msgBuf = new char[newMsgLen];
+        }
+
+        char* alloc_msg_buffer(int msgLen) {
+            return new char[msgLen];
+        }
+
+        void enqueue_request(sim_req_tag_t req_tag)
+        {
+            req_queue.append(req_tag);
+        }
+
+        private:
+            std::deque<sim_req_tag_t> req_queue;
+    }
+
+
+    class SimAppContext
+    {
+
+        static int MAX_DATA_PER_PKT = 16384;
+
+        public:
+            struct
+            {
+                // This is maintained between calls to GetReqBuf and SendRequest
+                // to reduce copying
+                sim_req_tag_t *crt_req_tag;
+
+                // Request tags used for RPCs exchanged with the servers
+                AppMemPool<req_tag_t> req_tag_pool;
+
+            } client;
+
+            struct
+            {
+                // current req_handle
+                TransportReceiver *receiver = nullptr;
+            } server;
+
+            // common to both servers and clients
+            SimRpc *rpc = nullptr;
+    };
 
     class SimulatedTransport : public Transport
     {
-    public:
-        SimulatedTransport(
-            const network::Configuration &config,
-            int nthreads,
-            uint8_t nr_req_types,
-            uint8_t id);
-        ~SimulatedTransport();
-        void Register(TransportReceiver *receiver, int replicaIdx);
-        void Run();
-        void Wait();
-        void Stop();
+        public:
+            SimulatedTransport(
+                const network::Configuration &config,
+                int nthreads,
+                uint8_t nr_req_types,
+                uint8_t id);
+            ~SimulatedTransport();
+            void Register(TransportReceiver *receiver, int replicaIdx);
+            void Run();
+            void Wait();
+            void Stop();
 
-        bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
-        bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
-        bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
-        bool SendResponse(size_t msgLen) override;
-        char *GetRequestBuf(size_t reqLen, size_t respLen) override;
-        int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) override;
+            bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
+            bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
+            bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
+            bool SendResponse(size_t msgLen) override;
+            char *GetRequestBuf(size_t reqLen, size_t respLen) override;
+            int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) override;
 
-        uint8_t GetID() override { return id; };
+            uint8_t GetID() override { return id; };
 
-    protected:
-        bool SendMessageInternal(TransportReceiver *src,
-                                 const Message &m,
-                                 bool multicast);
+        protected:
+            bool SendMessageInternal(TransportReceiver *src,
+                                    const Message &m,
+                                    bool multicast);
 
-    private:
-        // Configuration containing the ids of the servers
-        network::Configuration config;
+        private:
+            // Configuration containing the ids of the servers
+            network::Configuration config;
 
-        // Number of server threads
-        int nthreads;
+            SimAppContext *c;
 
-        // This corresponds to the thread id of the curren server
-        // used as the RPC id, must be unique per transport thread
-        uint8_t id;
+            // Number of server threads
+            int nthreads;
 
-        // This corresponds to the machine index
-        // Index of the receiver (if -1 then the receiver is a client that
-        // does not get requests, otherwise it is a server from the configuration)
-        int receiverIdx;
+            // This corresponds to the thread id of the current server
+            // used as the RPC id, must be unique per transport thread
+            uint8_t id;
 
-        std::map<int, TransportReceiver *> receivers;
+            // This corresponds to the machine index
+            // Index of the receiver (if -1 then the receiver is a client that
+            // does not get requests, otherwise it is a server from the configuration)
+            int receiverIdx;
     };
 }
 #endif  // _NETWORK_SIMTRANSPORT_H_
