@@ -118,6 +118,7 @@ class AppContext {
 class FastTransport : public Transport
 {
 public:
+    // TODO: I think we can remove the ip and phy_port argument here since we can get it from config?
     FastTransport(const network::Configuration &config,
                   std::string &ip,
                   int nthreads,
