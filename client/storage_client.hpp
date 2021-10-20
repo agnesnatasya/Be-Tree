@@ -3,6 +3,7 @@
 #define _STORAGE_CLIENT_H_
 
 #include "network/configuration.hpp"
+#include "network/configuration.hpp"
 
 #if IS_DEV
 #include "network/simtransport.hpp"
