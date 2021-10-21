@@ -22,6 +22,7 @@
 #include <boost/thread/thread.hpp>
 
 using namespace std;
+using namespace network;
 
 uint8_t get_numa_node(uint8_t thread_id)
 {
@@ -31,7 +32,7 @@ uint8_t get_numa_node(uint8_t thread_id)
 }
 
 void server_thread_func(StorageServerApp *storageApp,
-                        network::Configuration config,
+                        Configuration config,
                         uint8_t thread_id) {
     std::string local_uri = config.GetServerAddress(FLAGS_serverIndex).host;
     // TODO: provide mapping function from thread_id to numa_node
@@ -40,7 +41,7 @@ void server_thread_func(StorageServerApp *storageApp,
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
     cout << "Hi I'm here\n";
-    network::SimTransport *transport = new network::SimTransport(config, thread_id);
+    SimTransport *transport = new SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
@@ -53,7 +54,7 @@ void server_thread_func(StorageServerApp *storageApp,
     {
         PPanic("NUMA library not available.");
     }
-    network::FastTransport *transport = new network::FastTransport(config,
+    FastTransport *transport = new FastTransport(config,
                                                                    local_uri,
                                                                    // FLAGS_numServerThreads,
                                                                    1,
@@ -67,7 +68,7 @@ void server_thread_func(StorageServerApp *storageApp,
     StorageServer *ss = new StorageServer(
         config, 
         FLAGS_serverIndex,
-        (network::FastTransport *)transport,
+        (FastTransport *)transport,
         storageApp
     );
 
@@ -111,7 +112,7 @@ main(int argc, char **argv)
     if (configStream.fail()) {
         fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
     }
-    network::Configuration config(configStream);
+    Configuration config(configStream);
 
     if (FLAGS_serverIndex >= config.n) {
         fprintf(stderr, "server index %d is out of bounds; "
