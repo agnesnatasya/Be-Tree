@@ -31,18 +31,18 @@
 #include <iostream>
 #include "network/simtransport.hpp"
 
-namespace network
+using namespace network;
 {
 
-    static void simtransport_response(void *_context, void *_tag)
-    {
-        auto *c = static_cast<SimAppContext *>(_context);
-        auto *rt = reinterpret_cast<sim_req_tag_t *>(_tag);
-        Debug("Received respose, reqType = %d", rt->reqType);
-        rt->src->ReceiveResponse(rt->reqType,
-                                 reinterpret_cast<char *>(rt->resp_msgbuf.buf));
-        c->rpc->free_msg_buffer();
-        c->client.req_tag_pool.free(rt);
+static void simtransport_response(void *_context, void *_tag)
+{
+    auto *c = static_cast<SimAppContext *>(_context);
+    auto *rt = reinterpret_cast<sim_req_tag_t *>(_tag);
+    Debug("Received respose, reqType = %d", rt->reqType);
+    rt->src->ReceiveResponse(rt->reqType,
+                             reinterpret_cast<char *>(rt->resp_msgbuf.buf));
+    c->rpc->free_msg_buffer();
+    c->client.req_tag_pool.free(rt);
     }
 
     // Function called when the server received a request
