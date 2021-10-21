@@ -99,7 +99,7 @@ class SimAppContext
         } server;
 
         // common to both servers and clients
-        SimRpc *rpc = nullptr;
+        SimRpc *rpc = new SimRpc();
 };
 
 class SimTransport : public Transport
