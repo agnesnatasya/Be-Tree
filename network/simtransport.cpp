@@ -118,7 +118,7 @@ void SimTransport::Run()
         std::cout << "h2 \n";
         if (!c->rpc->req_queue.empty()) {
             sim_req_tag_t* req_tag = c->rpc->req_queue.front();
-            req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.resp_msgbuf);
+            req_tag->src->ReceiveRequest(req_tag->reqType, req_tag->req_msgbuf, req_tag->resp_msgbuf);
         }
     }
 }
