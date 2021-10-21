@@ -112,7 +112,7 @@ main(int argc, char **argv)
     if (configStream.fail()) {
         fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
     }
-    Configuration config(configStream);
+    network::Configuration config(configStream);
 
     if (FLAGS_serverIndex >= config.n) {
         fprintf(stderr, "server index %d is out of bounds; "
