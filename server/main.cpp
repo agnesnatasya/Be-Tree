@@ -47,7 +47,7 @@ void server_thread_func(StorageServerApp *storageApp,
         FLAGS_serverIndex,
         transport,
         storageApp);
-    transport->Run();
+    // transport->Run();
 
 #else
     if (numa_available() == -1)
@@ -55,14 +55,14 @@ void server_thread_func(StorageServerApp *storageApp,
         PPanic("NUMA library not available.");
     }
     FastTransport *transport = new FastTransport(config,
-                                                                   local_uri,
-                                                                   // FLAGS_numServerThreads,
-                                                                   1,
-                                                                   // ht_ct,
-                                                                   4,
-                                                                   0,
-                                                                   get_numa_node(thread_id),
-                                                                   thread_id);
+                                                local_uri,
+                                                // FLAGS_numServerThreads,
+                                                1,
+                                                // ht_ct,
+                                                4,
+                                                0,
+                                                get_numa_node(thread_id),
+                                                thread_id);
     //    last_transport = transport;
 
     StorageServer *ss = new StorageServer(
