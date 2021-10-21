@@ -23,7 +23,6 @@
 #include <boost/thread/thread.hpp>
 
 using namespace std;
-using namespace network;
 
 uint8_t get_numa_node(uint8_t thread_id)
 {
@@ -42,7 +41,7 @@ void server_thread_func(StorageServerApp *storageApp,
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
     cout << "Hi I'm here\n";
-    SimTransport::SimTransport *transport = new SimTransport::SimTransport(config, thread_id);
+    network::SimTransport *transport = new network::SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
