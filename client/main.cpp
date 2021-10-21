@@ -28,7 +28,7 @@ void client_thread_func(network::Configuration &config)
     network::SimTransport *transport = new network::SimTransport(config, 0);
     StorageClient *sc = new StorageClient(config, transport);
     string request;
-    nodeid_t result = StorageClient::GetNodeId(0, 0, request);
+    nodeid_t result = sc->GetNodeId(0, 0, request);
     cout << "SUCCESS \n";
     transport->Run();
 
