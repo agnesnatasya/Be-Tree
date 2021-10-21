@@ -87,7 +87,7 @@ void SimTransport::Register(TransportReceiver *receiver, int receiverIdx)
 int SimTransport::MAX_DATA_PER_PKT = 16384;
 
 // Used when the client wants to create a request
-char SimTransport::*GetRequestBuf(size_t reqLen, size_t respLen)
+char *SimTransport::GetRequestBuf(size_t reqLen, size_t respLen)
 {
     // create a new request tag
     if (reqLen == 0)
