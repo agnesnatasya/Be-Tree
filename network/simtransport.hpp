@@ -42,8 +42,6 @@
 
 typedef void (*sim_rpc_cont_func_t)(void *context, void *tag);
 
-namespace network
-{
 // A tag attached to every request we send;
 // it is passed to the response function
 struct sim_req_tag_t
@@ -146,5 +144,5 @@ class SimTransport : public Transport
         // does not get requests, otherwise it is a server from the configuration)
         int receiverIdx;
 };
-}
+
 #endif  // _NETWORK_SIMTRANSPORT_H_

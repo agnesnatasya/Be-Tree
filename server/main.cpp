@@ -41,7 +41,7 @@ void server_thread_func(StorageServerApp *storageApp,
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
     cout << "Hi I'm here\n";
-    network::SimTransport *transport = new network::SimTransport(config, thread_id);
+    SimTransport *transport = new SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
@@ -54,7 +54,7 @@ void server_thread_func(StorageServerApp *storageApp,
     {
         PPanic("NUMA library not available.");
     }
-    FastTransport::FastTransport *transport = new FastTransport::FastTransport(config,
+    network::FastTransport *transport = new network::FastTransport(config,
                                                                                 local_uri,
                                                                                 // FLAGS_numServerThreads,
                                                                                 1,
