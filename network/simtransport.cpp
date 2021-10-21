@@ -29,7 +29,7 @@
  **********************************************************************/
 
 #include <iostream>
-#include <memory>
+#include <cstring>
 
 #include "debug/assert.hpp"
 #include "network/simtransport.hpp"
@@ -66,9 +66,9 @@ SimTransport::SimTransport(
     const network::Configuration &config,
     uint8_t id
 ) 
-// : config(config), id(id)
+: config(config), id(id)
 {
-    // context = new SimAppContext();
+    context = new SimAppContext();
 }
 
 SimTransport::~SimTransport()
@@ -87,14 +87,13 @@ void SimTransport::Register(TransportReceiver *receiver, int receiverIdx)
 int SimTransport::MAX_DATA_PER_PKT = 16384;
 
 // Used when the client wants to create a request
-char SimTransport::*
-GetRequestBuf(size_t reqLen, size_t respLen)
+char SimTransport::*GetRequestBuf(size_t reqLen, size_t respLen)
 {
     // create a new request tag
     if (reqLen == 0)
-        reqLen = SimTransport.MAX_DATA_PER_PKT;
+        reqLen = SimTransport::MAX_DATA_PER_PKT;
     if (respLen == 0)
-        respLen = SimTransport.MAX_DATA_PER_PKT;
+        respLen = SimTransport::MAX_DATA_PER_PKT;
     c->client.crt_req_tag = c->client.req_tag_pool.alloc();
     c->client.crt_req_tag->req_msgbuf = new char[reqLen];
     c->client.crt_req_tag->resp_msgbuf = new char[respLen];
@@ -117,9 +116,9 @@ void SimTransport::Run()
     // If it's server, check the request queue
     while(!stop) {
         std::cout << "h2 \n";
-        if (!c->req_queue.empty()) {
-            sim_req_tag_t req_tag = c.req_queue.front();
-            req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.req_respbuf);
+        if (!c->rpc->req_queue.empty()) {
+            sim_req_tag_t req_tag = c->rpc->req_queue.front();
+            req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.resp_msgbuf);
         }
     }
 }
@@ -154,7 +153,7 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
             // need to use different erpc::MsgBuffer per session
             auto *rt = c->client.req_tag_pool.alloc();
             rt->req_msgbuf = new char[msgLen];
-            rt->resp_msgbuf = new char[SimTransport.MAX_DATA_PER_PKT];
+            rt->resp_msgbuf = new char[SimTransport::MAX_DATA_PER_PKT];
             rt->reqType = reqType;
             rt->src = src;
             std::memcpy(rt->req_msgbuf, c->client.crt_req_tag->req_msgbuf, msgLen);

@@ -55,28 +55,28 @@ struct sim_req_tag_t
 };
 
 class SimRpc {
+    public:
+        void free_msg_buffer(sim_req_tag_t* req_tag)
+        {
+            delete[] req_tag->req_msgbuf;
+            delete[] req_tag->resp_msgbuf;
+        }
 
-    void free_msg_buffer(sim_req_tag_t* req_tag)
-    {
-        delete[] req_tag->req_msgbuf;
-        delete[] req_tag->resp_msgbuf;
-    }
+        void resize_msg_buffer(char* msgBuf, int newMsgLen) {
+            msgBuf = new char[newMsgLen];
+        }
 
-    void resize_msg_buffer(char* msgBuf, int newMsgLen) {
-        msgBuf = new char[newMsgLen];
-    }
+        char* alloc_msg_buffer(int msgLen) {
+            return new char[msgLen];
+        }
 
-    char* alloc_msg_buffer(int msgLen) {
-        return new char[msgLen];
-    }
-
-    void enqueue_request(sim_req_tag_t* req_tag)
-    {
-        req_queue.push_back(req_tag);
-    }
+        void enqueue_request(sim_req_tag_t* req_tag)
+        {
+            req_queue.push_back(req_tag);
+        }
 
     private:
-        std::deque<sim_req_tag_t> req_queue;
+        std::deque<sim_req_tag_t*> req_queue;
 };
 
 class SimAppContext
