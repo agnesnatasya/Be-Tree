@@ -22,8 +22,7 @@
 
 using namespace std;
 
-void client_thread_func(StorageServerApp *storageApp,
-                        network::Configuration config)
+void client_thread_func(network::Configuration &config)
 {
 #if IS_DEV
     network::SimTransport *transport = new network::SimTransport(config, 0);
@@ -31,7 +30,7 @@ void client_thread_func(StorageServerApp *storageApp,
     string request;
     nodeid_t result = GetNodeId(0, 0, &request);
     cout << "SUCCESS \n";
-    cout << result; 
+    cout << result;
     transport->Run();
 
 #else
@@ -56,7 +55,7 @@ int main(int argc, char **argv)
     }
     network::Configuration config(configStream);
 
-    client_thread_func(, config);
+    client_thread_func(config);
 
     return 0;
 }
