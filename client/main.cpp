@@ -30,7 +30,7 @@ void client_thread_func(network::Configuration &config)
     string request;
     nodeid_t result = sc->GetNodeId(0, 0, request);
     cout << "SUCCESS\n";
-    cout << result.nodeIdx;
+    cout << result.nodeIdx << "\n";
     transport->Run();
 #else
 #endif
