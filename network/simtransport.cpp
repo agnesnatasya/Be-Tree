@@ -98,7 +98,8 @@ namespace network
         return c->client.crt_req_tag->req_msgbuf;
     }
 
-    int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) {
+    int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx)
+    {
         return -1;
     }
 
