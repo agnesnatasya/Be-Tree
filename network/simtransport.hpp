@@ -44,107 +44,107 @@ typedef void (*sim_rpc_cont_func_t)(void *context, void *tag);
 
 namespace network
 {
-    // A tag attached to every request we send;
-    // it is passed to the response function
-    struct sim_req_tag_t
+// A tag attached to every request we send;
+// it is passed to the response function
+struct sim_req_tag_t
+{
+    char *req_msgbuf;
+    char *resp_msgbuf;
+    uint8_t reqType;
+    TransportReceiver *src;
+    sim_rpc_cont_func_t cont_func;
+};
+
+class SimRpc {
+
+    void free_msg_buffer(sim_req_tag_t req_tag)
     {
-        char *req_msgbuf;
-        char *resp_msgbuf;
-        uint8_t reqType;
-        TransportReceiver *src;
-        sim_rpc_cont_func_t cont_func;
-    };
+        delete[] req_tag.req_msgbuf;
+        delete[] req_tag.resp_msgbuf;
+    }
 
-    class SimRpc {
+    void resize_msg_buffer(char* msgBuf, int newMsgLen) {
+        msgBuf = new char[newMsgLen];
+    }
 
-        void free_msg_buffer(sim_req_tag_t req_tag)
+    char* alloc_msg_buffer(int msgLen) {
+        return new char[msgLen];
+    }
+
+    void enqueue_request(sim_req_tag_t req_tag)
+    {
+        req_queue.push_back(req_tag);
+    }
+
+    private:
+        std::deque<sim_req_tag_t> req_queue;
+};
+
+class SimAppContext
+{
+
+    static int MAX_DATA_PER_PKT;
+
+    public:
+        struct
         {
-            delete[] req_tag.req_msgbuf;
-            delete[] req_tag.resp_msgbuf;
-        }
+            // This is maintained between calls to GetReqBuf and SendRequest
+            // to reduce copying
+            sim_req_tag_t *crt_req_tag;
 
-        void resize_msg_buffer(char* msgBuf, int newMsgLen) {
-            msgBuf = new char[newMsgLen];
-        }
+            // Request tags used for RPCs exchanged with the servers
+            AppMemPool<sim_req_tag_t> req_tag_pool;
 
-        char* alloc_msg_buffer(int msgLen) {
-            return new char[msgLen];
-        }
+        } client;
 
-        void enqueue_request(sim_req_tag_t req_tag)
+        struct
         {
-            req_queue.push_back(req_tag);
-        }
+            // current req_handle
+            TransportReceiver *receiver = nullptr;
+        } server;
 
-        private:
-            std::deque<sim_req_tag_t> req_queue;
-    };
+        // common to both servers and clients
+        SimRpc *rpc = nullptr;
+};
 
-    class SimAppContext
-    {
+class SimTransport : public Transport
+{
+    public:
+        SimTransport(
+            const network::Configuration &config,
+            uint8_t id);
+        ~SimTransport();
+        void Register(TransportReceiver *receiver, int replicaIdx);
+        void Run();
+        void Wait();
+        void Stop();
 
-        static int MAX_DATA_PER_PKT;
+        bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
+        bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
+        bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
+        bool SendResponse(size_t msgLen) override;
+        char *GetRequestBuf(size_t reqLen, size_t respLen) override;
+        int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) override;
 
-        public:
-            struct
-            {
-                // This is maintained between calls to GetReqBuf and SendRequest
-                // to reduce copying
-                sim_req_tag_t *crt_req_tag;
+        uint8_t GetID() override { return id; };
 
-                // Request tags used for RPCs exchanged with the servers
-                AppMemPool<sim_req_tag_t> req_tag_pool;
+    private:
+        // Configuration containing the ids of the servers
+        network::Configuration config;
 
-            } client;
+        SimAppContext *c;
 
-            struct
-            {
-                // current req_handle
-                TransportReceiver *receiver = nullptr;
-            } server;
+        // Number of server threads
+        int nthreads;
 
-            // common to both servers and clients
-            SimRpc *rpc = nullptr;
-    };
+        // This corresponds to the thread id of the current server
+        // used as the RPC id, must be unique per transport thread
+        uint8_t id;
 
-    class SimTransport : public Transport
-    {
-        public:
-            SimTransport(
-                const network::Configuration &config,
-                uint8_t id);
-            ~SimTransport();
-            void Register(TransportReceiver *receiver, int replicaIdx);
-            void Run();
-            void Wait();
-            void Stop();
-
-            bool SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) override;
-            bool SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) override;
-            bool SendResponse(uint64_t reqHandleIdx, size_t msgLen) override;
-            bool SendResponse(size_t msgLen) override;
-            char *GetRequestBuf(size_t reqLen, size_t respLen) override;
-            int GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t dstRpcIdx) override;
-
-            uint8_t GetID() override { return id; };
-
-        private:
-            // Configuration containing the ids of the servers
-            network::Configuration config;
-
-            SimAppContext *c;
-
-            // Number of server threads
-            int nthreads;
-
-            // This corresponds to the thread id of the current server
-            // used as the RPC id, must be unique per transport thread
-            uint8_t id;
-
-            // This corresponds to the machine index
-            // Index of the receiver (if -1 then the receiver is a client that
-            // does not get requests, otherwise it is a server from the configuration)
-            int receiverIdx;
-    };
+        // This corresponds to the machine index
+        // Index of the receiver (if -1 then the receiver is a client that
+        // does not get requests, otherwise it is a server from the configuration)
+        int receiverIdx;
+};
 }
 #endif  // _NETWORK_SIMTRANSPORT_H_
