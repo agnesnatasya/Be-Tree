@@ -39,6 +39,15 @@ void server_thread_func(StorageServerApp *storageApp,
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
+    network::SimTransport *transport = new network::SimTransport(config, thread_id);
+    StorageServer *ss = new StorageServer(
+        config, 
+        FLAGS_serverIndex,
+        transport,
+        storageApp
+    );
+    transport->Run();
+
 #else
 
     if (numa_available() == -1)
@@ -57,9 +66,11 @@ void server_thread_func(StorageServerApp *storageApp,
     //    last_transport = transport;
 
     StorageServer *ss = new StorageServer(
-        config, FLAGS_serverIndex,
+        config, 
+        FLAGS_serverIndex,
         (network::FastTransport *)transport,
-        storageApp);
+        storageApp
+    );
 
     transport->Run();
 #endif
@@ -118,7 +129,7 @@ main(int argc, char **argv)
     std::vector<std::thread> thread_arr(1);
 
     StorageServerApp *storageApp = new StorageServerApp();
-    
+
     // create replica threads
     // for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
     // for (uint8_t i = 0; i < ht_ct; i++) {

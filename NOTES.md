@@ -94,7 +94,9 @@ RPC options:
 #### Setup
 1. Set -DIS_DEV in Makefile
 ## Run
---configFile=config --replicaIndex=0 or 1
+1. make
+2. ./client/client
+3. ./server/server --configFile=config-test --serverIndex=0 or 1
 
 ## Understanding the code
 1. The client and server have different Transport object. They use this object to access all info and properties of it. 

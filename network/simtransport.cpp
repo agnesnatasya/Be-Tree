@@ -106,7 +106,7 @@ namespace network
     {
         // If it's client, just busy waiting
         if (receiverIdx == -1) {
-            while(true);
+            while(!stop);
         }
 
         // If it's server, check the request queue
