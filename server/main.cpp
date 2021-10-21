@@ -41,7 +41,9 @@ void server_thread_func(StorageServerApp *storageApp,
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
     cout << "Hi I'm here\n";
-    SimTransport *transport = new SimTransport(config, thread_id);
+    network::SimTransport *a;
+    network::SimTransport::SimTransport *b;
+    network::SimTransport *transport = new network::SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,

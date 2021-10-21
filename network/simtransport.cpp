@@ -31,6 +31,7 @@
 #include <iostream>
 #include "network/simtransport.hpp"
 
+namespace network {
 static void simtransport_response(void *_context, void *_tag)
 {
 auto *c = static_cast<SimAppContext *>(_context);
@@ -172,4 +173,5 @@ bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
     simtransport_response(c, c->client.crt_req_tag);
     return true;
+}
 }

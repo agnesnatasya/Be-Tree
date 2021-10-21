@@ -40,6 +40,7 @@
 
 #define MULTIPLE_ACTIVE_REQUESTS false
 
+namespace network {
 typedef void (*sim_rpc_cont_func_t)(void *context, void *tag);
 
 // A tag attached to every request we send;
@@ -111,7 +112,7 @@ class SimTransport : public Transport
         SimTransport(
             const network::Configuration &config,
             uint8_t id);
-        ~SimTransport();
+        virtual ~SimTransport();
         void Register(TransportReceiver *receiver, int replicaIdx);
         void Run();
         void Wait();
@@ -144,5 +145,5 @@ class SimTransport : public Transport
         // does not get requests, otherwise it is a server from the configuration)
         int receiverIdx;
 };
-
+}
 #endif  // _NETWORK_SIMTRANSPORT_H_
