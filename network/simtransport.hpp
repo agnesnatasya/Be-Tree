@@ -112,8 +112,6 @@ namespace network
         public:
             SimTransport(
                 const network::Configuration &config,
-                int nthreads,
-                uint8_t nr_req_types,
                 uint8_t id);
             ~SimTransport();
             void Register(TransportReceiver *receiver, int replicaIdx);
