@@ -62,7 +62,7 @@ LDFLAGS += $(LIBSSL_LDFLAGS)
 GTEST_DIR := /usr/src/gtest
 
 # Additional flags
-PARANOID = 1
+PARANOID = 0
 ifneq ($(PARANOID),0)
 override CFLAGS += -DPARANOID=1
 $(info WARNING: Paranoid mode enabled)
