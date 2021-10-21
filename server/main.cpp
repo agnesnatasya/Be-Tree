@@ -32,7 +32,7 @@ uint8_t get_numa_node(uint8_t thread_id)
 }
 
 void server_thread_func(StorageServerApp *storageApp,
-                        Configuration config,
+                        network::Configuration config,
                         uint8_t thread_id) {
     std::string local_uri = config.GetServerAddress(FLAGS_serverIndex).host;
     // TODO: provide mapping function from thread_id to numa_node
