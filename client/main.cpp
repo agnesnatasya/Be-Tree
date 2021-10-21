@@ -22,20 +22,41 @@
 
 using namespace std;
 
-// Implmentation of the client's stub implementation
-class StorageClientStub
+void client_thread_func(StorageServerApp *storageApp,
+                        network::Configuration config)
 {
-};
+#if IS_DEV
+    network::SimTransport *transport = new network::SimTransport(config, 0);
+    StorageClient *sc = StorageClient(config, transport);
+    string request;
+    nodeid_t result = GetNodeId(0, 0, &request);
+    cout << "SUCCESS \n";
+    cout << result; 
+    transport->Run();
 
-void client_thread_func()
-{
-    
+#else
+#endif
 }
 
 int main(int argc, char **argv)
 {
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-    client_thread_func();
+    if (FLAGS_configFile == "")
+    {
+        fprintf(stderr, "option --configFile is required\n");
+        return EXIT_FAILURE;
+    }
+
+    // Load configuration
+    std::ifstream configStream(FLAGS_configFile);
+    if (configStream.fail())
+    {
+        fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
+    }
+    network::Configuration config(configStream);
+
+    client_thread_func(, config);
 
     return 0;
 }
