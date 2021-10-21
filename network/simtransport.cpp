@@ -28,6 +28,7 @@
  *
  **********************************************************************/
 
+#include <iostream>
 #include "network/simtransport.hpp"
 
 namespace network
@@ -110,8 +111,10 @@ namespace network
             while(!stop);
         }
 
+        std::cout << "hi\n";
         // If it's server, check the request queue
         while(!stop) {
+            std::cout << "h2 \n";
             if (!c.req_queue.empty()) {
                 sim_req_tag_t req_tag = c.req_queue.front();
                 req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.req_respbuf);

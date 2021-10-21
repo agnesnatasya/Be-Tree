@@ -39,6 +39,7 @@ void server_thread_func(StorageServerApp *storageApp,
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
+    cout << "Hi I'm here\n";
     network::SimTransport *transport = new network::SimTransport::SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
