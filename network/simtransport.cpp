@@ -31,7 +31,7 @@
 #include <iostream>
 #include "network/simtransport.hpp"
 
-using namespace network;
+namespace network
 {
 
 static void simtransport_response(void *_context, void *_tag)
@@ -64,9 +64,10 @@ static void simtransport_response(void *_context, void *_tag)
     SimTransport::SimTransport(
         const network::Configuration &config,
         uint8_t id
-    ) : config(config), id(id)
+    ) 
+    // : config(config), id(id)
     {
-        context = new SimAppContext();
+        // context = new SimAppContext();
     }
 
     SimTransport::~SimTransport()
