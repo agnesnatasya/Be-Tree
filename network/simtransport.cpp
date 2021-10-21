@@ -60,7 +60,7 @@ namespace network
 #endif
     }
 
-    SimulatedTransport::SimulatedTransport(
+    SimTransport::SimTransport(
         const network::Configuration &config,
         uint8_t id
     ) : config(config), id(id)
@@ -68,11 +68,11 @@ namespace network
         context = new SimAppContext();
     }
 
-    SimulatedTransport::~SimulatedTransport()
+    SimTransport::~SimTransport()
     {
     }
 
-    void SimulatedTransport::Register(TransportReceiver *receiver, int receiverIdx)
+    void SimTransport::Register(TransportReceiver *receiver, int receiverIdx)
     {
         assert(receiverIdx < config.n);
         
@@ -81,17 +81,17 @@ namespace network
         this->receiverIdx = receiverIdx;
     }
 
-    int SimulatedTransport::MAX_DATA_PER_PKT = 16384;
+    int SimTransport::MAX_DATA_PER_PKT = 16384;
 
     // Used when the client wants to create a request
-    char SimulatedTransport::*
+    char SimTransport::*
     GetRequestBuf(size_t reqLen, size_t respLen)
     {
         // create a new request tag
         if (reqLen == 0)
-            reqLen = SimulatedTransport.MAX_DATA_PER_PKT;
+            reqLen = SimTransport.MAX_DATA_PER_PKT;
         if (respLen == 0)
-            respLen = SimulatedTransport.MAX_DATA_PER_PKT;
+            respLen = SimTransport.MAX_DATA_PER_PKT;
         c->client.crt_req_tag = c->client.req_tag_pool.alloc();
         c->client.crt_req_tag->req_msgbuf = new char[reqLen];
         c->client.crt_req_tag->resp_msgbuf = new char[respLen];
@@ -102,7 +102,7 @@ namespace network
         return -1;
     }
 
-    void SimulatedTransport::Run()
+    void SimTransport::Run()
     {
         // If it's client, just busy waiting
         if (receiverIdx == -1) {
@@ -118,18 +118,18 @@ namespace network
         }
     }
 
-    void SimulatedTransport::Stop() {
+    void SimTransport::Stop() {
         Debug("Stopping transport!");
         stop = true;
     }
 
-    bool SimulatedTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
+    bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
         c->client.crt_req_tag->src = src;
         c->client.crt_req_tag->reqType = reqType;
         c->enqueue_request(c->client.crt_req_tag);
     }
 
-    bool SimulatedTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) {
+    bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) {
         for (int i = 0; i < config.n; i++)
         {
             // skip the sending entity
@@ -160,13 +160,13 @@ namespace network
         }
     }
 
-    bool SimulatedTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
+    bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
         Debug("Sent response, msgLen = %lu\n", msgLen);
         simtransport_response(c, c->client.crt_req_tag);
         return true;
     }
 
-    bool SimulatedTransport::SendResponse(size_t msgLen) {
+    bool SimTransport::SendResponse(size_t msgLen) {
         Debug("Sent response, msgLen = %lu\n", msgLen);
         simtransport_response(c, c->client.crt_req_tag);
         return true;
