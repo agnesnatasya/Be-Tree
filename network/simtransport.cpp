@@ -107,8 +107,11 @@ int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t
 
 void SimTransport::Run()
 {
+    std::cout << "running!";
+
     // If it's client, just busy waiting
     if (receiverIdx == -1) {
+        std::cout << "client!";
         while(!stop);
     }
 
