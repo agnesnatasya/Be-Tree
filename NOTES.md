@@ -44,12 +44,13 @@ Implementation eRPC server thread
 ```
 sudo apt install make
 sudo apt install cmake
-sudo apt install g++
 sudo apt install libssl-dev
 sudo apt install libevent-dev
 sudo apt install libboost-all-dev
 sudo apt install libgtest-dev
 sudo apt-get install libgflags-dev
+sudo apt-get install libgoogle-glog-dev
+sudo apt install g++
 make
 ```
 
