@@ -55,6 +55,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
                                     getNodeIdReqType,
                                     serverIdx, coreIdx,
                                     sizeof(nodeid_request_t));
+    std::cout << "Sent to server";
     this->nodeIdReply.serverIdx = serverIdx;
     this->nodeIdReply.coreIdx = coreIdx;
     return this->nodeIdReply;
