@@ -39,8 +39,6 @@ void server_thread_func(StorageServerApp *storageApp,
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
-
-#else
     network::SimTransport *transport = new network::SimTransport::SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
@@ -49,6 +47,7 @@ void server_thread_func(StorageServerApp *storageApp,
         storageApp);
     transport->Run();
 
+#else
     if (numa_available() == -1)
     {
         PPanic("NUMA library not available.");
