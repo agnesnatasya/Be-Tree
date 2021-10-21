@@ -68,7 +68,7 @@ SimTransport::SimTransport(
 ) 
 : config(config), id(id)
 {
-    context = new SimAppContext();
+    c = new SimAppContext();
 }
 
 SimTransport::~SimTransport()
@@ -117,7 +117,7 @@ void SimTransport::Run()
     while(!stop) {
         std::cout << "h2 \n";
         if (!c->rpc->req_queue.empty()) {
-            sim_req_tag_t req_tag = c->rpc->req_queue.front();
+            sim_req_tag_t* req_tag = c->rpc->req_queue.front();
             req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.resp_msgbuf);
         }
     }

@@ -75,7 +75,6 @@ class SimRpc {
             req_queue.push_back(req_tag);
         }
 
-    private:
         std::deque<sim_req_tag_t*> req_queue;
 };
 
@@ -105,8 +104,8 @@ class SimAppContext
 
 class SimTransport : public Transport
 {
-    static int MAX_DATA_PER_PKT;
     public:
+        static int MAX_DATA_PER_PKT;
         SimTransport(
             const network::Configuration &config,
             uint8_t id);
