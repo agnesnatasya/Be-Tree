@@ -31,6 +31,7 @@ void server_thread_func(StorageServerApp *storageApp,
     // for now assume it's round robin
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
+#if IS_DEV
     network::FastTransport *transport = new network::FastTransport(config,
                                                 local_uri,
                                                 //FLAGS_numServerThreads,
@@ -48,6 +49,8 @@ void server_thread_func(StorageServerApp *storageApp,
       storageApp);
 
     transport->Run();
+#else
+#endif
 }
 
 //void signal_handler( int signal_num ) {
@@ -110,18 +113,24 @@ main(int argc, char **argv)
 
       StorageServerApp *storageApp = new StorageServerApp();
 
-//    for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
-//    for (uint8_t i = 0; i < ht_ct; i++) {
-    for (uint8_t i = 0; i < 1; i++) {
-        // thread_arr[i] = std::thread(server_thread_func, server, config, i%nn_ct, i);
-        // erpc::bind_to_core(thread_arr[i], i%nn_ct, i/nn_ct);
-//        uint8_t numa_node = (i % 4 < 2)?0:1;
-//        uint8_t idx = i/4 + (i % 2) * 20;
-        uint8_t numa_node = 0;
-        uint8_t idx = i;        
-        thread_arr[i] = std::thread(server_thread_func, storageApp, config, numa_node, i);
-        erpc::bind_to_core(thread_arr[i], numa_node, idx);
-    }
+      // TODO: start the app on all available cores to regulate frequency boosting
+      // int ht_ct = boost::thread::hardware_concurrency();
+      // std::vector<std::thread> thread_arr(FLAGS_numServerThreads);
+      // std::vector<std::thread> thread_arr(ht_ct);
+      std::vector<std::thread> thread_arr(1);
+
+      StorageServerApp *storageApp = new StorageServerApp();
+
+      // for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
+      // for (uint8_t i = 0; i < ht_ct; i++) {
+      for (uint8_t i = 0; i < 1; i++)
+      {
+          // thread_arr[i] = std::thread(server_thread_func, server, config, i%nn_ct, i);
+          // erpc::bind_to_core(thread_arr[i], i%nn_ct, i/nn_ct);
+          // uint8_t numa_node = (i % 4 < 2)?0:1;
+          // uint8_t idx = i/4 + (i % 2) * 20;
+          thread_arr[i] = std::thread(server_thread_func, storageApp, config, i);
+      }
 
     for (auto &thread : thread_arr) thread.join();
 

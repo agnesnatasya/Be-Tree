@@ -80,6 +80,8 @@ FastTransport::FastTransport(const network::Configuration &config,
 
     c = new AppContext();
 
+    erpc::bind_to_core(thread_arr[i], numa_node, idx);
+
     // The first thread to grab the lock initializes the transport
     fasttransport_lock.lock();
     if (fasttransport_initialized) {
