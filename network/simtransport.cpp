@@ -29,6 +29,9 @@
  **********************************************************************/
 
 #include <iostream>
+#include <memory>
+
+#include "debug/assert.hpp"
 #include "network/simtransport.hpp"
 
 namespace network {
@@ -38,8 +41,8 @@ auto *c = static_cast<SimAppContext *>(_context);
 auto *rt = reinterpret_cast<sim_req_tag_t *>(_tag);
 Debug("Received respose, reqType = %d", rt->reqType);
 rt->src->ReceiveResponse(rt->reqType,
-                            reinterpret_cast<char *>(rt->resp_msgbuf.buf));
-c->rpc->free_msg_buffer();
+                            reinterpret_cast<char *>(rt->resp_msgbuf));
+c->rpc->free_msg_buffer(rt);
 c->client.req_tag_pool.free(rt);
 }
 
@@ -53,9 +56,9 @@ static void simtransport_request(void *_context, void *_tag)
     // upcall to the app
 #else
     // upcall to the app
-    c->server.receiver->ReceiveRequest(c->cilent.crt_req_tag->reqType,
-                                        c->cilent.crt_req_tag->req_msgbuf,
-                                        c->cilent.crt_req_tag->resp_msgbuf);
+    c->server.receiver->ReceiveRequest(c->client.crt_req_tag->reqType,
+                                        c->client.crt_req_tag->req_msgbuf,
+                                        c->client.crt_req_tag->resp_msgbuf);
 #endif
 }
 
@@ -114,7 +117,7 @@ void SimTransport::Run()
     // If it's server, check the request queue
     while(!stop) {
         std::cout << "h2 \n";
-        if (!c.req_queue.empty()) {
+        if (!c->req_queue.empty()) {
             sim_req_tag_t req_tag = c.req_queue.front();
             req_tag.src->ReceiveRequest(req_tag.reqType, req_tag.req_msgbuf, req_tag.req_respbuf);
         }
@@ -129,7 +132,8 @@ void SimTransport::Stop() {
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
-    c->enqueue_request(c->client.crt_req_tag);
+    c->rpc->enqueue_request(c->client.crt_req_tag);
+    return true;
 }
 
 bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) {
@@ -149,8 +153,8 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
         {
             // need to use different erpc::MsgBuffer per session
             auto *rt = c->client.req_tag_pool.alloc();
-            rt->req_msgbuf = new char[reqLen];
-            rt->resp_msgbuf = new char[respLen];
+            rt->req_msgbuf = new char[msgLen];
+            rt->resp_msgbuf = new char[SimTransport.MAX_DATA_PER_PKT];
             rt->reqType = reqType;
             rt->src = src;
             std::memcpy(rt->req_msgbuf, c->client.crt_req_tag->req_msgbuf, msgLen);
@@ -161,6 +165,7 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
     {
         // TODO: free the current buffer
     }
+    return true;
 }
 
 bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {

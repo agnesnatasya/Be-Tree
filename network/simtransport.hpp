@@ -56,10 +56,10 @@ struct sim_req_tag_t
 
 class SimRpc {
 
-    void free_msg_buffer(sim_req_tag_t req_tag)
+    void free_msg_buffer(sim_req_tag_t* req_tag)
     {
-        delete[] req_tag.req_msgbuf;
-        delete[] req_tag.resp_msgbuf;
+        delete[] req_tag->req_msgbuf;
+        delete[] req_tag->resp_msgbuf;
     }
 
     void resize_msg_buffer(char* msgBuf, int newMsgLen) {
@@ -70,7 +70,7 @@ class SimRpc {
         return new char[msgLen];
     }
 
-    void enqueue_request(sim_req_tag_t req_tag)
+    void enqueue_request(sim_req_tag_t* req_tag)
     {
         req_queue.push_back(req_tag);
     }
@@ -81,9 +81,6 @@ class SimRpc {
 
 class SimAppContext
 {
-
-    static int MAX_DATA_PER_PKT;
-
     public:
         struct
         {
@@ -108,9 +105,10 @@ class SimAppContext
 
 class SimTransport : public Transport
 {
+    static int MAX_DATA_PER_PKT;
     public:
         SimTransport(
-            Configuration &config,
+            const network::Configuration &config,
             uint8_t id);
         virtual ~SimTransport();
         void Register(TransportReceiver *receiver, int replicaIdx);
@@ -144,6 +142,8 @@ class SimTransport : public Transport
         // Index of the receiver (if -1 then the receiver is a client that
         // does not get requests, otherwise it is a server from the configuration)
         int receiverIdx;
-};
+
+        bool stop = false;
+    };
 }
 #endif  // _NETWORK_SIMTRANSPORT_H_
