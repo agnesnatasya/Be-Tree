@@ -110,7 +110,7 @@ class SimTransport : public Transport
 {
     public:
         SimTransport(
-            const network::Configuration &config,
+            Configuration &config,
             uint8_t id);
         virtual ~SimTransport();
         void Register(TransportReceiver *receiver, int replicaIdx);
