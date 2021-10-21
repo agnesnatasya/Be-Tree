@@ -26,11 +26,10 @@ void client_thread_func(network::Configuration &config)
 {
 #if IS_DEV
     network::SimTransport *transport = new network::SimTransport(config, 0);
-    StorageClient *sc = StorageClient(config, transport);
+    StorageClient *sc = new StorageClient(config, transport);
     string request;
     nodeid_t result = GetNodeId(0, 0, &request);
     cout << "SUCCESS \n";
-    cout << result;
     transport->Run();
 
 #else
