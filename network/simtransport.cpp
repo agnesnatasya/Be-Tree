@@ -115,6 +115,7 @@ void SimTransport::Run()
     // If it's server, check the request queue
     while(!stop) {
         if (!c->rpc->req_queue.empty()) {
+            cout << "There's a message";
             sim_req_tag_t* req_tag = c->rpc->req_queue.front();
             req_tag->src->ReceiveRequest(req_tag->reqType, req_tag->req_msgbuf, req_tag->resp_msgbuf);
         }
@@ -130,6 +131,7 @@ bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, 
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
     c->rpc->enqueue_request(c->client.crt_req_tag);
+    cout << "Request enqueued!";
     return true;
 }
 
