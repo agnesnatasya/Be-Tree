@@ -11,7 +11,6 @@
 #include "network/transport.hpp"
 
 #if IS_DEV
-#warning ooooo
 #include "network/simtransport.hpp"
 #else
 #include "network/fasttransport.hpp"
@@ -40,15 +39,13 @@ void server_thread_func(StorageServerApp *storageApp,
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
-    cout << "Hi I'm here\n";
-    network::SimTransport *a;
     network::SimTransport* transport = new network::SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
         transport,
         storageApp);
-    // transport->Run();
+    transport->Run();
 
 #else
     if (numa_available() == -1)
