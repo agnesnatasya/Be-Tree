@@ -29,7 +29,7 @@ void client_thread_func(network::Configuration &config)
     StorageClient *sc = new StorageClient(config, transport);
     string request;
     nodeid_t result = sc->GetNodeId(0, 0, request);
-    cout << "SUCCESS";
+    cout << "SUCCESS\n";
     cout << result.nodeIdx;
     transport->Run();
 #else
