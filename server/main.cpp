@@ -42,7 +42,7 @@ void server_thread_func(StorageServerApp *storageApp,
 #if IS_DEV
     cout << "Hi I'm here\n";
     network::SimTransport *a;
-    network::SimTransport *transport = new network::SimTransport(config, thread_id);
+    network::SimTransport *transport = new SimTransport(config, thread_id);
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
