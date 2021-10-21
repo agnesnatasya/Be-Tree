@@ -79,7 +79,8 @@ FastTransport::FastTransport(const network::Configuration &config,
     Assert(numa_node <=  numa_max_node());
 
     c = new AppContext();
-
+    
+    // bind round robin on the availlable numa nodes
     erpc::bind_to_core(thread_arr[i], numa_node, idx);
 
     // The first thread to grab the lock initializes the transport

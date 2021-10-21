@@ -23,6 +23,13 @@
 
 using namespace std;
 
+uint8_t get_numa_node(uint8_t thread_id)
+{
+    // TODO: provide mapping function from thread_id to numa_node
+    // for now assume it's round robin
+    return 0;
+}
+
 void server_thread_func(StorageServerApp *storageApp,
                         network::Configuration config,
                         uint8_t thread_id) {
@@ -33,6 +40,11 @@ void server_thread_func(StorageServerApp *storageApp,
     //int ht_ct = boost::thread::hardware_concurrency();
 #if IS_DEV
 #else
+
+    if (numa_available() == -1)
+    {
+        PPanic("NUMA library not available.");
+    }
     network::FastTransport *transport = new network::FastTransport(config,
                                                                    local_uri,
                                                                    // FLAGS_numServerThreads,
@@ -40,7 +52,7 @@ void server_thread_func(StorageServerApp *storageApp,
                                                                    // ht_ct,
                                                                    4,
                                                                    0,
-                                                                   numa_node,
+                                                                   get_numa_node(thread_id),
                                                                    thread_id);
     //    last_transport = transport;
 
@@ -74,10 +86,10 @@ main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-//    if (FLAGS_keysFile == "") {
-//        fprintf(stderr, "option --keysFile is required\n");
-//        return EXIT_FAILURE;
-//    }
+    // if (FLAGS_keysFile == "") {
+    //     fprintf(stderr, "option --keysFile is required\n");
+    //     return EXIT_FAILURE;
+    // }
 
     if (FLAGS_serverIndex == -1) {
         fprintf(stderr, "option replicaIndex is required\n");
@@ -96,12 +108,6 @@ main(int argc, char **argv)
                 "only %d servers defined\n", FLAGS_serverIndex, config.n);
     }
 
-    // create replica threads
-    // bind round robin on the availlable numa nodes
-    if (numa_available() == -1) {
-        PPanic("NUMA library not available.");
-    }
-
     //int nn_ct = numa_max_node() + 1;
     //int ht_ct = boost::thread::hardware_concurrency()/boost::thread::physical_concurrency(); // number of hyperthreads
 
@@ -112,7 +118,8 @@ main(int argc, char **argv)
     std::vector<std::thread> thread_arr(1);
 
     StorageServerApp *storageApp = new StorageServerApp();
-
+    
+    // create replica threads
     // for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
     // for (uint8_t i = 0; i < ht_ct; i++) {
     for (uint8_t i = 0; i < 1; i++)
