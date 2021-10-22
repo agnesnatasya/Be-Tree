@@ -1,11 +1,5 @@
 d := $(dir $(lastword $(MAKEFILE_LIST)))
 
-ifeq ($(IS_DEV),1)
-FILES=simtransport_test.cpp
-endif
-
-TEST_SRCS += $(addprefix $(d), $(FILES))
-
 $(d)simtransport_test: $(o)simtransport_test.o $(OBJS-swap_space) $(OBJS-backing_store) $(LIB-transport) $(LIB-debug) $(LIB-simtransport) $(OBJS-storage_server) \
 	$(OBJS-storage_client) \
 	$(GTEST_MAIN)
