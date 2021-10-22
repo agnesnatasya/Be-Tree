@@ -151,7 +151,7 @@ include debug/Rules.mk
 include network/Rules.mk
 include client/Rules.mk
 include server/Rules.mk
-include test/Rules.mk
+include simulation/Rules.mk
 #include replication/common/Rules.mk
 #include replication/meerkatir/Rules.mk
 #include replication/leadermeerkatir/Rules.mk
@@ -283,9 +283,11 @@ $(TEST_BINS:%=run-%): run-%: %
 $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
+.PHONY: simulation
+simulation: $(TEST_BINS)
+
 .PHONY: test
 test:
-	echo $(TEST_BINS)
 	$(TEST_BINS:%=run-%)
 .PHONY: check
 check: test
