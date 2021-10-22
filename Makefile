@@ -283,6 +283,7 @@ $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
 .PHONY: test
+echo $(TEST_BINS)
 test: $(TEST_BINS:%=run-%)
 .PHONY: check
 check: test
