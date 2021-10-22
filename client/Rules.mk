@@ -1,6 +1,10 @@
 d := $(dir $(lastword $(MAKEFILE_LIST)))
 
+ifeq ($(IS_DEV),0)
 SRCS += $(addprefix $(d), main.cpp swap_space.cpp backing_store.cpp storage_client.cpp)
+else 
+SRCS += $(addprefix $(d), swap_space.cpp backing_store.cpp storage_client.cpp)
+endif
 
 OBJS-storage_client := $(o)storage_client.o
 

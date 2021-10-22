@@ -9,12 +9,7 @@
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
-
-#if IS_DEV
-#include "network/simtransport.hpp"
-#else
 #include "network/fasttransport.hpp"
-#endif
 
 #include "common/gflags.hpp"
 #include "storage_server.hpp"
@@ -38,16 +33,6 @@ void server_thread_func(StorageServerApp *storageApp,
     // for now assume it's round robin
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
-#if IS_DEV
-    network::SimTransport* transport = new network::SimTransport(config, thread_id);
-    StorageServer *ss = new StorageServer(
-        config,
-        FLAGS_serverIndex,
-        transport,
-        storageApp);
-    transport->Run();
-
-#else
     if (numa_available() == -1)
     {
         PPanic("NUMA library not available.");
@@ -71,7 +56,6 @@ void server_thread_func(StorageServerApp *storageApp,
     );
 
     transport->Run();
-#endif
 }
 
 //void signal_handler( int signal_num ) {

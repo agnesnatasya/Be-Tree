@@ -8,12 +8,7 @@
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
-
-#if IS_DEV
-#include "network/simtransport.hpp"
-#else
 #include "network/fasttransport.hpp"
-#endif
 
 #include "common/gflags.hpp"
 #include "storage_client.hpp"
@@ -24,16 +19,6 @@ using namespace std;
 
 void client_thread_func(network::Configuration &config)
 {
-#if IS_DEV
-    network::SimTransport *transport = new network::SimTransport(config, 0);
-    StorageClient *sc = new StorageClient(config, transport);
-    string request;
-    nodeid_t result = sc->GetNodeId(0, 0, request);
-    cout << "SUCCESS\n";
-    cout << result.nodeIdx << "\n";
-    transport->Run();
-#else
-#endif
 }
 
 int main(int argc, char **argv)
