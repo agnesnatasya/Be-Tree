@@ -107,12 +107,6 @@ int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t
 
 void SimTransport::Run()
 {
-
-    // // If it's client, just busy waiting
-    // if (receiverIdx == -1) {
-    //     while(!stop);
-    // }
-
     // If it's server, check the request queue
     while(!stop) {
         if (!c->rpc->req_queue.empty()) {
@@ -131,7 +125,7 @@ bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, 
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
     c->rpc->enqueue_request(c->client.crt_req_tag);
-    while (client is blocked) {do the above}
+    // while (client is blocked) {do the above}
     return true;
 }
 
