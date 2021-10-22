@@ -14,8 +14,8 @@ OBJS-backing_store :=  $(o)backing_store.o
 
 ifeq ($(IS_DEV),0)
 $(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store) $(o)main.o
+BINS += $(d)client
 else 
 $(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store)
 endif
 
-BINS += $(d)client

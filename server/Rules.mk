@@ -10,8 +10,7 @@ OBJS-storage_server :=  $(o)storage_server.o $(LIB-debug) $(LIB-configuration) $
 
 ifeq ($(IS_DEV),0)
 $(d)server := $(LIB-transport_implementation) $(OBJS-storage_server) $(o)main.o
+BINS += $(d)server
 else 
 $(d)server := $(LIB-transport_implementation) $(OBJS-storage_server)
 endif
-
-BINS += $(d)server
