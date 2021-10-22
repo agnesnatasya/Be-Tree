@@ -6,9 +6,6 @@ endif
 
 TEST_SRCS += $(addprefix $(d), $(FILES))
 
-ifeq ($(IS_DEV),1)
-GTEST_SRCS += $(d)simtransport_test
-endif
 $(d)simtransport_test: $(o)simtransport_test.o $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store) $(LIB-transport) $(LIB-debug) $(LIB-simtransport) $(OBJS-storage_server) \
 	$(GTEST_MAIN)
 
