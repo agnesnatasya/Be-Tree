@@ -131,6 +131,12 @@ BINS :=
 # using the appropriate flags.  This is also used as the list of tests
 # to run for the `test' target.
 TEST_BINS :=
+# SIM_BINS is like BINS, but for simulation binaries.  They will be linked
+# using the appropriate flags.  This is also used as the list of tests
+# to run for the `sim` target.
+# It is similar to test that it uses simulated tranpsort, but you can also 
+# provide manual inputs to it, as contrast to test
+SIM_BINS :=
 
 # add-CFLAGS is a utility macro that takes a space-separated list of
 # sources and a set of CFLAGS.  It sets the CFLAGS for each provided
@@ -284,7 +290,7 @@ $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
 .PHONY: simulation
-simulation: $(TEST_BINS)
+simulation: $(SIM_BINS)
 
 .PHONY: test
 test:
