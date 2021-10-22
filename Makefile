@@ -117,6 +117,9 @@ SRCS :=
 # TEST_SRCS is just like SRCS, but these source files will be compiled
 # with testing related flags.
 TEST_SRCS :=
+# SIM_SRCS is just like SRCS, but these source files will be compiled
+# with simulation related flags.
+SIM_SRCS :=
 # GTEST_SRCS is tests that use Google's testing framework
 GTEST_SRCS :=
 
@@ -192,7 +195,7 @@ include simulation/Rules.mk
 DEPFLAGS = -M -MF ${@:.o=.d} -MP -MT $@ -MG
 
 # $(call add-CFLAGS,$(TEST_SRCS),$(CHECK_CFLAGS))
-OBJS := $(SRCS:%.cpp=.obj/%.o) $(TEST_SRCS:%.cpp=.obj/%.o) $(GTEST_SRCS:%.cpp=.obj/%.o)
+OBJS := $(SRCS:%.cpp=.obj/%.o) $(TEST_SRCS:%.cpp=.obj/%.o) $(GTEST_SRCS:%.cpp=.obj/%.o) $(SIM_SRCS:%.cpp=.obj/%.o)
 
 define compile
 	@mkdir -p $(dir $@)
@@ -235,7 +238,6 @@ $(PROTOOBJS:%.o=%-pic.o): .obj/%-pic.o: .obj/gen/%.pb.cc $(PROTOSRCS)
 
 $(call add-LDFLAGS,$(TEST_BINS),$(CHECK_LDFLAGS))
 $(call add-LDFLAGS,$(SIM_BINS),$(CHECK_LDFLAGS))
-
 
 $(BINS) $(TEST_BINS) $(SIM_BINS): %:
 	$(call trace,LD,$@,$(LD) -o $@ $^ $(LDFLAGS) $(LDFLAGS-$@))
