@@ -4,6 +4,8 @@ ifeq ($(IS_DEV),1)
 FILES=simtransport_test.cpp
 endif
 
+echo heeeeeelo
+
 TEST_SRCS += $(addprefix $(d), $(FILES))
 
 ifeq ($(IS_DEV),1)
