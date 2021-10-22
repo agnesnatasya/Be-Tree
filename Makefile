@@ -235,7 +235,7 @@ $(PROTOOBJS:%.o=%-pic.o): .obj/%-pic.o: .obj/gen/%.pb.cc $(PROTOSRCS)
 
 $(call add-LDFLAGS,$(TEST_BINS),$(CHECK_LDFLAGS))
 
-$(BINS) $(TEST_BINS): %:
+$(BINS) $(TEST_BINS) $(SIM_BINS): %:
 	$(call trace,LD,$@,$(LD) -o $@ $^ $(LDFLAGS) $(LDFLAGS-$@))
 
 #
@@ -267,7 +267,7 @@ $(GTEST_MAIN) : .obj/gtest/gtest-all.o .obj/gtest/gtest_main.o
 
 .PHONY: clean
 clean:
-	$(call trace,RM,binaries,rm -f $(BINS) $(TEST_BINS))
+	$(call trace,RM,binaries,rm -f $(BINS) $(TEST_BINS) $(SIM_BINS))
 	$(call trace,RM,objects,rm -rf .obj)
 
 #
