@@ -7,16 +7,9 @@ CXX = g++
 LD = g++
 EXPAND = lib/tmpl/expand
 
-IS_DEV = 1
-ifeq ($(IS_DEV),1)
 RPC_PATH= 
 RPC_CFLAGS_RAW := 
 RPC_LDFLAGS_RAW := -ldl -lgflags  -libverbs
-else
-RPC_PATH= "./third_party/eRPC"
-RPC_CFLAGS_RAW := -I $(RPC_PATH)/src -DRAW=true
-RPC_LDFLAGS_RAW := -L $(RPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
-endif
 
 #ERPC_CFLAGS_DPDK := -I $(RPC_PATH)/src -I /usr/include/dpdk -DDPDK=true -march=native
 #ERPC_LDFLAGS_DPDK := -L $(RPC_PATH)/build -lerpc -lnuma -ldl -lgflags -ldpdk
@@ -27,7 +20,7 @@ CFLAGS_WARNINGS:= -Wno-unused-function -Wno-nested-anon-types -Wno-keyword-macro
 # more information.
 #
 # [1]: http://www.brendangregg.com/perf.html#FlameGraphs
-CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-frame-pointer -DIS_DEV=$(IS_DEV)
+CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-frame-pointer
 CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 
@@ -285,7 +278,11 @@ print-%:
 #
 
 .PHONY: all
-all: $(BINS)
+all: 
+	RPC_PATH= "./third_party/eRPC"
+	RPC_CFLAGS_RAW := -I $(RPC_PATH)/src -DRAW=true
+	RPC_LDFLAGS_RAW := -L $(RPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
+	$(BINS)
 
 $(TEST_BINS:%=run-%): run-%: %
 	$(call trace,RUN,$<,$<)
