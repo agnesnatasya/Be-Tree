@@ -13,9 +13,9 @@ OBJS-swap_space := $(o)swap_space.o $(OBJS-storage_client)
 OBJS-backing_store :=  $(o)backing_store.o
 
 ifeq ($(IS_DEV),0)
-$(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store) $(o)main.o
+$(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store) $(OBJS-storage_client) $(o)main.o
 BINS += $(d)client
 else 
-$(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store)
+$(d)client := $(LIB-transport_implementation) $(OBJS-swap_space) $(OBJS-backing_store) $(OBJS-storage_client)
 endif
 
