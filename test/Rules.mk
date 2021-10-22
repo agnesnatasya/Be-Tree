@@ -4,7 +4,7 @@ ifeq ($(IS_DEV),1)
 FILES=simtransport_test.cpp
 endif
 
-echo heeeeeelo
+@echo "test"
 
 TEST_SRCS += $(addprefix $(d), $(FILES))
 

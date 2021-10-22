@@ -6,7 +6,7 @@ else
 FILES=transport.cpp configuration.cpp simtransport.cpp
 endif
 
-echo network
+@echo "network"
 
 SRCS += $(addprefix $(d), $(FILES))
 
