@@ -1,6 +1,6 @@
 d := $(dir $(lastword $(MAKEFILE_LIST)))
 
-SIM_SRCS := simtransport_test.cpp
+SIM_SRCS := $(d)simtransport_test.cpp
 
 $(d)simtransport_test: $(o)simtransport_test.o \
 	$(OBJS-swap_space) $(OBJS-backing_store) \
