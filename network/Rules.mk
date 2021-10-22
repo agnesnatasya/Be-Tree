@@ -6,8 +6,6 @@ else
 FILES=transport.cpp configuration.cpp simtransport.cpp
 endif
 
-@echo "network"
-
 SRCS += $(addprefix $(d), $(FILES))
 
 LIB-configuration := $(o)configuration.o $(LIB-debug)
