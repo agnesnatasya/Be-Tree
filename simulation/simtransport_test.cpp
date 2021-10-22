@@ -11,7 +11,7 @@
 #include "network/simtransport.hpp"
 
 #include "common/gflags.hpp"
-#include "storage_client.hpp"
+#include "client/storage_client.hpp"
 
 #include <boost/thread/thread.hpp>
 
