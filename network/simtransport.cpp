@@ -167,7 +167,7 @@ bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
     return true;
 }
 
-bool SimTransport::SendResponse(size_t msgLen, struct original_request) {
+bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
     simtransport_response(c, c->client.crt_req_tag);
     return true;
