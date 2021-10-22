@@ -234,6 +234,8 @@ $(PROTOOBJS:%.o=%-pic.o): .obj/%-pic.o: .obj/gen/%.pb.cc $(PROTOSRCS)
 #
 
 $(call add-LDFLAGS,$(TEST_BINS),$(CHECK_LDFLAGS))
+$(call add-LDFLAGS,$(SIM_BINS),$(CHECK_LDFLAGS))
+
 
 $(BINS) $(TEST_BINS) $(SIM_BINS): %:
 	$(call trace,LD,$@,$(LD) -o $@ $^ $(LDFLAGS) $(LDFLAGS-$@))
