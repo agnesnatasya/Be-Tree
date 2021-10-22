@@ -9,9 +9,9 @@ endif
 OBJS-storage_server :=  $(o)storage_server.o $(LIB-debug) $(LIB-configuration) $(LIB-transport) 
 
 ifeq ($(IS_DEV),0)
-$(d)server: $(LIB-transport_implementation) $(OBJS-storage_server) $(o)main.o
+$(d)server := $(LIB-transport_implementation) $(OBJS-storage_server) $(o)main.o
 else 
-$(d)server: $(LIB-transport_implementation) $(OBJS-storage_server)
+$(d)server := $(LIB-transport_implementation) $(OBJS-storage_server)
 endif
 
 BINS += $(d)server
