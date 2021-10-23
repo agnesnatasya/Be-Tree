@@ -87,16 +87,25 @@ RPC options:
     cmake .
     ```
 
+
+## Run
+1. make
+2. ./client/client
+3. ./server/server --configFile=config --serverIndex=0 or 1
+
+### Examples
+1. An example of the configFile is the config file
+
 ### Simulated Transport
 * No hardware setup is needed
 * Client and server can run on the same machine on different ports
 
-#### Setup
-1. Set -DIS_DEV in Makefile
 ## Run
-1. make
-2. ./client/client
-3. ./server/server --configFile=config-test --serverIndex=0 or 1
+1. make simulation
+2. ./simulation/simtransport_sim --configFile=config_sim
+
+### Examples
+1. An example of the configFile is the config_sim file
 
 ## Understanding the code
 1. The client and server have different Transport object. They use this object to access all info and properties of it. 
