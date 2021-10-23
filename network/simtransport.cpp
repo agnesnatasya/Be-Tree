@@ -122,10 +122,10 @@ void SimTransport::Stop() {
 }
 
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
+    // while (client is blocked) {do the above}
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
     c->rpc->enqueue_request(c->client.crt_req_tag);
-    // while (client is blocked) {do the above}
     return true;
 }
 
