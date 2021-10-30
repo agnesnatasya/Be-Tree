@@ -3,6 +3,7 @@
 #include "debug/message.hpp"
 #include "client/storage_client.hpp"
 #include "common/messages.hpp"
+#include <iostream>
 
 //#include <sys/time.h>
 //#include <math.h>
@@ -51,6 +52,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
 
     reqBuf->req_nr = reqId;
     blocked = true;
+    cout << "as a client this is the request type" << getNodeIdReqType << "close \n";
     transport->SendRequestToServer(this,
                                     getNodeIdReqType,
                                     serverIdx, coreIdx,

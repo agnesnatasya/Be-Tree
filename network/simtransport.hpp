@@ -70,12 +70,12 @@ class SimRpc {
             return new char[msgLen];
         }
 
-        void enqueue_request(sim_req_tag_t* req_tag)
-        {
-            req_queue.push_back(req_tag);
-        }
+        // void enqueue_request(sim_req_tag_t* req_tag)
+        // {
+        //     req_queue.push_back(req_tag);
+        // }
 
-        std::deque<sim_req_tag_t*> req_queue;
+        // std::deque<sim_req_tag_t*> req_queue;
 };
 
 class SimAppContext
@@ -143,6 +143,7 @@ class SimTransport : public Transport
         int receiverIdx;
 
         bool stop = false;
+
     };
 }
 #endif  // _NETWORK_SIMTRANSPORT_H_

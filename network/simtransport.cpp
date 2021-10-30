@@ -34,6 +34,8 @@
 #include "debug/assert.hpp"
 #include "network/simtransport.hpp"
 
+#include <boost/fiber/all.hpp>
+
 namespace network {
 static void simtransport_response(void *_context, void *_tag)
 {
@@ -78,9 +80,8 @@ SimTransport::~SimTransport()
 void SimTransport::Register(TransportReceiver *receiver, int receiverIdx)
 {
     assert(receiverIdx < config.n);
-    
-    if (receiverIdx > -1)
-        c->server.receiver = receiver;
+
+    c->server.receiver = receiver;
     this->receiverIdx = receiverIdx;
 }
 
@@ -107,11 +108,16 @@ int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t
 
 void SimTransport::Run()
 {
-    // If it's server, check the request queue
     while(!stop) {
-        if (!c->rpc->req_queue.empty()) {
-            sim_req_tag_t* req_tag = c->rpc->req_queue.front();
-            req_tag->src->ReceiveRequest(req_tag->reqType, req_tag->req_msgbuf, req_tag->resp_msgbuf);
+        if (c->client.crt_req_tag) {
+        // if (!c->rpc->req_queue.empty()) {
+            sim_req_tag_t* curr_req_tag = c->client.crt_req_tag;            
+            // currReqTag = req_tag;
+            c->server.receiver->ReceiveRequest(
+                curr_req_tag->reqType, 
+                curr_req_tag->req_msgbuf, 
+                curr_req_tag->resp_msgbuf
+            );
         }
     }
 }
@@ -122,10 +128,11 @@ void SimTransport::Stop() {
 }
 
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
-    // while (client is blocked) {do the above}
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
-    c->rpc->enqueue_request(c->client.crt_req_tag);
+    while (src->Blocked()) {
+        boost::this_fiber::yield();
+    }
     return true;
 }
 
@@ -140,7 +147,7 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
         {
             c->client.crt_req_tag->src = src;
             c->client.crt_req_tag->reqType = reqType;
-            c->rpc->enqueue_request(c->client.crt_req_tag);
+            // c->rpc->enqueue_request(c->client.crt_req_tag);
         }
         else
         {
@@ -151,7 +158,7 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
             rt->reqType = reqType;
             rt->src = src;
             std::memcpy(rt->req_msgbuf, c->client.crt_req_tag->req_msgbuf, msgLen);
-            c->rpc->enqueue_request(rt);
+            // c->rpc->enqueue_request(rt);
         }
     }
     if (this->receiverIdx == config.n - 1)

@@ -4,6 +4,7 @@
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
+// #include "common/messages.hpp"
 
 struct nodeid_t {
     uint32_t serverIdx;

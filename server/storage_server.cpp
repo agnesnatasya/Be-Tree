@@ -6,6 +6,7 @@
  **********************************************************************/
 #include "storage_server.hpp"
 #include "common/messages.hpp"
+#include <iostream>
 
 using namespace std;
 
@@ -35,12 +36,13 @@ StorageServer::~StorageServer() { }
 
 void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf) {
     size_t respLen;
+    cout << "as a server this is " << getNodeIdReqType << "\n";
     switch(reqType) {
         case getNodeIdReqType:
             HandleGetNodeId(reqBuf, respBuf, respLen);
             break;
         default:
-            Warning("Unrecognized rquest type: %d", reqType);
+            Warning("Unrecognized request type: %d", reqType);
     }
 
     // For every request, we need to send a response (because we use eRPC)
