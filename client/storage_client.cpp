@@ -10,7 +10,7 @@
 
 #include <random>
 using namespace std;
-
+// const int reqType::getNodeId = 3;
 StorageClient::StorageClient(const network::Configuration &config,
                    network::Transport *transport,
                    uint64_t clientid)
@@ -52,9 +52,8 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
 
     reqBuf->req_nr = reqId;
     blocked = true;
-    cout << "as a client this is the request type" << getNodeIdReqType << "close \n";
     transport->SendRequestToServer(this,
-                                    getNodeIdReqType,
+                                    requestType::getNodeId,
                                     serverIdx, coreIdx,
                                     sizeof(nodeid_request_t));
     this->nodeIdReply.serverIdx = serverIdx;
@@ -65,7 +64,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
 void StorageClient::ReceiveResponse(uint8_t reqType, char *respBuf) {
     Debug("[%lu] received response", clientid);
     switch(reqType){
-        case getNodeIdReqType:
+        case requestType::getNodeId:
             HandleGetNodeIdReply(respBuf);
             break;
         default:

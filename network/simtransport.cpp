@@ -37,32 +37,6 @@
 #include <boost/fiber/all.hpp>
 
 namespace network {
-static void simtransport_response(void *_context, void *_tag)
-{
-auto *c = static_cast<SimAppContext *>(_context);
-auto *rt = reinterpret_cast<sim_req_tag_t *>(_tag);
-Debug("Received respose, reqType = %d", rt->reqType);
-rt->src->ReceiveResponse(rt->reqType,
-                            reinterpret_cast<char *>(rt->resp_msgbuf));
-c->rpc->free_msg_buffer(rt);
-c->client.req_tag_pool.free(rt);
-}
-
-// Function called when the server received a request
-// (clients never receive requests, just responses)
-static void simtransport_request(void *_context, void *_tag)
-{
-    // save the req_handle for when we are in the SendMessage function
-    auto *c = static_cast<SimAppContext *>(_context);
-#if MULTIPLE_ACTIVE_REQUESTS
-    // upcall to the app
-#else
-    // upcall to the app
-    c->server.receiver->ReceiveRequest(c->client.crt_req_tag->reqType,
-                                        c->client.crt_req_tag->req_msgbuf,
-                                        c->client.crt_req_tag->resp_msgbuf);
-#endif
-}
 
 SimTransport::SimTransport(
     const network::Configuration &config,
@@ -108,18 +82,7 @@ int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t
 
 void SimTransport::Run()
 {
-    while(!stop) {
-        if (c->client.crt_req_tag) {
-        // if (!c->rpc->req_queue.empty()) {
-            sim_req_tag_t* curr_req_tag = c->client.crt_req_tag;            
-            // currReqTag = req_tag;
-            c->server.receiver->ReceiveRequest(
-                curr_req_tag->reqType, 
-                curr_req_tag->req_msgbuf, 
-                curr_req_tag->resp_msgbuf
-            );
-        }
-    }
+    while(!stop) {}
 }
 
 void SimTransport::Stop() {
@@ -130,53 +93,33 @@ void SimTransport::Stop() {
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
+    c->server.receiver->ReceiveRequest(
+                c->client.crt_req_tag->reqType, 
+                c->client.crt_req_tag->req_msgbuf, 
+                c->client.crt_req_tag->resp_msgbuf
+            );
     while (src->Blocked()) {
         boost::this_fiber::yield();
     }
+    c->client.crt_req_tag = nullptr;
     return true;
 }
 
 bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqType, uint8_t dstRpcIdx, size_t msgLen) {
-    for (int i = 0; i < config.n; i++)
-    {
-        // skip the sending entity
-        if (this->receiverIdx == i)
-            continue;
-
-        if (i == config.n - 1)
-        {
-            c->client.crt_req_tag->src = src;
-            c->client.crt_req_tag->reqType = reqType;
-            // c->rpc->enqueue_request(c->client.crt_req_tag);
-        }
-        else
-        {
-            // need to use different erpc::MsgBuffer per session
-            auto *rt = c->client.req_tag_pool.alloc();
-            rt->req_msgbuf = new char[msgLen];
-            rt->resp_msgbuf = new char[SimTransport::MAX_DATA_PER_PKT];
-            rt->reqType = reqType;
-            rt->src = src;
-            std::memcpy(rt->req_msgbuf, c->client.crt_req_tag->req_msgbuf, msgLen);
-            // c->rpc->enqueue_request(rt);
-        }
-    }
-    if (this->receiverIdx == config.n - 1)
-    {
-        // TODO: free the current buffer
-    }
     return true;
 }
 
 bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
-    simtransport_response(c, c->client.crt_req_tag);
+    sim_req_tag_t *tag = c->client.crt_req_tag;
+    tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
     return true;
 }
 
 bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
-    simtransport_response(c, c->client.crt_req_tag);
+    sim_req_tag_t *tag = c->client.crt_req_tag;
+    tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
     return true;
 }
 }

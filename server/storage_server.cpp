@@ -9,7 +9,7 @@
 #include <iostream>
 
 using namespace std;
-// const int getNodeIdReqType = 3;
+// const int reqType::getNodeId = 3;
 
 StorageServerApp::StorageServerApp() : current_id(0) {
     current_id++;
@@ -37,9 +37,8 @@ StorageServer::~StorageServer() { }
 
 void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf) {
     size_t respLen;
-    // cout << "as a server this is " << getNodeIdReqType << "\n";
     switch(reqType) {
-        case getNodeIdReqType:
+        case requestType::getNodeId:
             HandleGetNodeId(reqBuf, respBuf, respLen);
             break;
         default:

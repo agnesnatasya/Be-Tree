@@ -22,8 +22,7 @@ void client_thread_func(StorageClient *sc)
 {
     string request;
     nodeid_t result = sc->GetNodeId(0, 0, request);
-    cout << "SUCCESS\n";
-    cout << result.nodeIdx << "\n";
+    cout << "This is the server's node: " << result.nodeIdx << "\n";
 }
 
 void server_thread_func(network::SimTransport *transport)
@@ -65,8 +64,8 @@ int main(int argc, char **argv)
     {
         server_thread_arr[i] = std::thread(server_thread_func, transport);
     }
-    std::vector<std::thread> client_thread_arr(100);
-    for (uint8_t i = 0; i < 100; i++)
+    std::vector<std::thread> client_thread_arr(1);
+    for (uint8_t i = 0; i < 1; i++)
     {
         client_thread_arr[i] = std::thread(client_thread_func, sc);
     }
