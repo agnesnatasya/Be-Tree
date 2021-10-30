@@ -110,7 +110,9 @@ RPC options:
 ## Understanding the code
 1. The client and server have different Transport object. They use this object to access all info and properties of it. 
 2. When they request/response, they call the static method. The server pass the message bugger specified
-
+3. Per thread, there is 1 request being processed at any point of time.
+    - there is no need to have a queue in sim transport
+    - in eRPC, there is a queue because multiple client threads can connect to it. 
 ## Questions
 1. Why is the Nexus instantiated in the server thread instead of the main function of the server code?
 2. Why is the Be-tree node on the client?
