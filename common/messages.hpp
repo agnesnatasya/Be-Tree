@@ -2,9 +2,7 @@
 #define _NETWORK_MESSAGES_H_
 
 // Request types
-namespace requestType {
-    constexpr uint8_t getNodeId{3};
-}
+const uint8_t getNodeIdRequestType = 1;
 
 struct nodeid_request_t {
     uint64_t req_nr;

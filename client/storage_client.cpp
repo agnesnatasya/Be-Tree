@@ -53,7 +53,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
     reqBuf->req_nr = reqId;
     blocked = true;
     transport->SendRequestToServer(this,
-                                    requestType::getNodeId,
+                                    getNodeIdRequestType,
                                     serverIdx, coreIdx,
                                     sizeof(nodeid_request_t));
     this->nodeIdReply.serverIdx = serverIdx;
@@ -64,7 +64,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
 void StorageClient::ReceiveResponse(uint8_t reqType, char *respBuf) {
     Debug("[%lu] received response", clientid);
     switch(reqType){
-        case requestType::getNodeId:
+        case getNodeIdRequestType:
             HandleGetNodeIdReply(respBuf);
             break;
         default:

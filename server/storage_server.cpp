@@ -38,7 +38,7 @@ StorageServer::~StorageServer() { }
 void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf) {
     size_t respLen;
     switch(reqType) {
-        case requestType::getNodeId:
+        case getNodeIdRequestType:
             HandleGetNodeId(reqBuf, respBuf, respLen);
             break;
         default:
