@@ -34,40 +34,28 @@ int main(int argc, char **argv)
 {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-    // if (FLAGS_configFile == "")
-    // {
-    //     fprintf(stderr, "option --configFile is required\n");
-    //     return EXIT_FAILURE;
-    // }
-
-    // // Load configuration
-    // std::ifstream configStream(FLAGS_configFile);
-    // if (configStream.fail())
-    // {
-    //     fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
-    // }
-    // network::Configuration config(configStream);
-
     network::Configuration config;
     network::SimTransport *transport = new network::SimTransport(config, 0);
 
+    /* Client and server creation */
+    // It has to be in this order such that
+    // the transport object is correctly registered to the server
     StorageClient *sc = new StorageClient(config, transport);
-    StorageServerApp *storageApp = new StorageServerApp();
     StorageServer *ss = new StorageServer(
         config,
         FLAGS_serverIndex,
         transport,
-        storageApp
+        new StorageServerApp()
     );
 
-    /* Thread creation */
+    /* Threads creation */
     std::vector<std::thread> server_thread_arr(1);
     for (uint8_t i = 0; i < 1; i++)
     {
         server_thread_arr[i] = std::thread(server_thread_func, transport);
     }
-    std::vector<std::thread> client_thread_arr(1);
-    for (uint8_t i = 0; i < 1; i++)
+    std::vector<std::thread> client_thread_arr(100);
+    for (uint8_t i = 0; i < 100; i++)
     {
         client_thread_arr[i] = std::thread(client_thread_func, sc);
     }

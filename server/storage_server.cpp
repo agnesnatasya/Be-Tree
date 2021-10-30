@@ -6,10 +6,8 @@
  **********************************************************************/
 #include "storage_server.hpp"
 #include "common/messages.hpp"
-#include <iostream>
 
 using namespace std;
-// const int reqType::getNodeId = 3;
 
 StorageServerApp::StorageServerApp() : current_id(0) {
     current_id++;

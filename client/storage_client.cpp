@@ -3,14 +3,13 @@
 #include "debug/message.hpp"
 #include "client/storage_client.hpp"
 #include "common/messages.hpp"
-#include <iostream>
 
 //#include <sys/time.h>
 //#include <math.h>
 
 #include <random>
 using namespace std;
-// const int reqType::getNodeId = 3;
+
 StorageClient::StorageClient(const network::Configuration &config,
                    network::Transport *transport,
                    uint64_t clientid)
