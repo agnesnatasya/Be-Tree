@@ -34,19 +34,21 @@ int main(int argc, char **argv)
 {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-    if (FLAGS_configFile == "")
-    {
-        fprintf(stderr, "option --configFile is required\n");
-        return EXIT_FAILURE;
-    }
+    // if (FLAGS_configFile == "")
+    // {
+    //     fprintf(stderr, "option --configFile is required\n");
+    //     return EXIT_FAILURE;
+    // }
 
-    // Load configuration
-    std::ifstream configStream(FLAGS_configFile);
-    if (configStream.fail())
-    {
-        fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
-    }
-    network::Configuration config(configStream);
+    // // Load configuration
+    // std::ifstream configStream(FLAGS_configFile);
+    // if (configStream.fail())
+    // {
+    //     fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
+    // }
+    // network::Configuration config(configStream);
+
+    network::Configuration config;
     network::SimTransport *transport = new network::SimTransport(config, 0);
 
     StorageClient *sc = new StorageClient(config, transport);

@@ -27,6 +27,11 @@ ServerAddress::operator<(const ServerAddress &other) const {
     return this_t < other_t;
 }
 
+Configuration::Configuration() {
+    multicastAddress = new ServerAddress("", "");
+    n = 1;
+}
+
 Configuration::Configuration(const Configuration &c)
     : n(c.n), servers(c.servers), hasMulticast(c.hasMulticast)
 {

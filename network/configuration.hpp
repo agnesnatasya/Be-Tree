@@ -38,6 +38,7 @@ struct ServerAddress
 class Configuration
 {
 public:
+    Configuration();
     Configuration(const Configuration &c);
     Configuration(int n,
 //                  int f,
