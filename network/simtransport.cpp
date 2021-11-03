@@ -82,7 +82,24 @@ int SimTransport::GetSession(TransportReceiver *src, uint8_t replicaIdx, uint8_t
 
 void SimTransport::Run()
 {
-    while(!stop) {}
+    /**
+     The run is supposed to be in the main thread
+     It picks up request tat is allocated by the client
+     And then it acts as the server caller
+     This way, it doesnt force the server to handle multithreadedness
+     If the server wants to be multithreaded, they can run several of this tranpost
+     We don't even need a queue here, because the initial design is that server doesnt even need to be multithreaded
+     But we can extend it to be a queue if the server wants itself to be multithreaded
+     **/
+    while(!stop) {
+        // if c.client is not null -> will try to handle this request
+        // call the server
+        c->server.receiver->ReceiveRequest(
+                c->client.crt_req_tag->reqType, 
+                c->client.crt_req_tag->req_msgbuf, 
+                c->client.crt_req_tag->resp_msgbuf
+            );
+    }
 }
 
 void SimTransport::Stop() {
@@ -93,15 +110,15 @@ void SimTransport::Stop() {
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
     c->client.crt_req_tag->src = src;
     c->client.crt_req_tag->reqType = reqType;
-    c->server.receiver->ReceiveRequest(
-                c->client.crt_req_tag->reqType, 
-                c->client.crt_req_tag->req_msgbuf, 
-                c->client.crt_req_tag->resp_msgbuf
-            );
+    // c->server.receiver->ReceiveRequest(
+    //             c->client.crt_req_tag->reqType, 
+    //             c->client.crt_req_tag->req_msgbuf, 
+    //             c->client.crt_req_tag->resp_msgbuf
+    //         );
     while (src->Blocked()) {
         boost::this_fiber::yield();
     }
-    c->client.crt_req_tag = nullptr;
+    // c->client.crt_req_tag = nullptr;
     return true;
 }
 
