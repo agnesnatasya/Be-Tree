@@ -59,10 +59,8 @@ int main(int argc, char **argv)
     {
         client_thread_arr[i] = std::thread(client_thread_func, sc);
     }
-
+    /* Single thread, server and client in the same thread */
     /* Blocking join */
-    for (auto &client_thread : client_thread_arr)
-        client_thread.join();
     for (auto &server_thread : server_thread_arr)
         server_thread.join();
 
