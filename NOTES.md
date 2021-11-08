@@ -42,15 +42,8 @@ Implementation eRPC server thread
 1. Create an Ubuntu VM
 2. Run these installation commands, these are the libraries needed by the code
 ```
-sudo apt install make
-sudo apt install cmake
-sudo apt install libssl-dev
-sudo apt install libevent-dev
-sudo apt install libboost-all-dev
-sudo apt install libgtest-dev
-sudo apt-get install libgflags-dev
-sudo apt-get install libgoogle-glog-dev
-sudo apt install g++
+sudo apt install make; sudo apt install cmake; sudo apt install libssl-dev; sudo apt install libevent-dev; sudo apt install libboost-all-dev; sudo apt install libgtest-dev; sudo apt-get install libgflags-dev; sudo apt-get install libgoogle-glog-dev; sudo apt install g++; sudo apt-get install -y pkg-config
+
 make
 ```
 
