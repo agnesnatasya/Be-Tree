@@ -46,7 +46,8 @@
 
 namespace network {
 
-static std::mutex simtransport_lock;
+static std::mutex simtransport_client_lock;
+static std::mutex simtransport_server_lock;
 
 SimTransport::SimTransport(
     const network::Configuration &config,
@@ -55,6 +56,7 @@ SimTransport::SimTransport(
 : config(config), id(id)
 {
     c = new SimAppContext();
+    c->client.is_ready = false;
 }
 
 SimTransport::~SimTransport()
@@ -63,8 +65,6 @@ SimTransport::~SimTransport()
 
 void SimTransport::Register(TransportReceiver *receiver, int receiverIdx)
 {
-    assert(receiverIdx < config.n);
-
     // Only register server
     // Client registration is invalid
     if (receiverIdx > -1) {
@@ -79,6 +79,7 @@ int SimTransport::MAX_DATA_PER_PKT = 16384;
 char *SimTransport::GetRequestBuf(size_t reqLen, size_t respLen)
 {
     // create a new request tag
+    simtransport_client_lock.lock();
     if (reqLen == 0)
         reqLen = SimTransport::MAX_DATA_PER_PKT;
     if (respLen == 0)
@@ -108,14 +109,18 @@ void SimTransport::Run()
     while(!stop) {
         // if c.client is not null -> will try to handle this request
         // call the server
-        if (c->client.crt_req_tag != nullptr) {
+        simtransport_server_lock.lock();
+        if (c->client.is_ready) {
+            printf("This is the reqType yo %d\n", c->client.crt_req_tag->reqType);
             c->server.receiver->ReceiveRequest(
                 c->client.crt_req_tag->reqType, 
                 c->client.crt_req_tag->req_msgbuf, 
                 c->client.crt_req_tag->resp_msgbuf
             );
-            c->client.crt_req_tag = nullptr;
+            c->client.is_ready = false;
+            printf("This is the reqType yo %d\n", c->client.crt_req_tag->reqType);
         }
+        simtransport_server_lock.unlock();
     }
 }
 
@@ -126,20 +131,13 @@ void SimTransport::Stop() {
 
 bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, uint32_t serverIdx, uint8_t dstRpcIdx, size_t msgLen) {
     // Mutex so that only 1 client's request can be handled at any point
-    simtransport_lock.lock();
-
-    sim_req_tag_t req_tag;
-    req_tag->src = src;
-    req_tag->reqType = reqType;
-    // c->server.receiver->ReceiveRequest(
-    //             c->client.crt_req_tag->reqType, 
-    //             c->client.crt_req_tag->req_msgbuf, 
-    //             c->client.crt_req_tag->resp_msgbuf
-    //         );
+    c->client.crt_req_tag->src = src;
+    c->client.crt_req_tag->reqType = reqType;
+    c->client.is_ready = true;
     while (src->Blocked()) {
         boost::this_fiber::yield();
     }
-    simtransport_lock.unlock();
+    simtransport_client_lock.unlock();
     return true;
 }
 
@@ -158,6 +156,9 @@ bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
 bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
     sim_req_tag_t *tag = c->client.crt_req_tag;
+    printf("this is the tag req type %d\n", tag->reqType);
+    printf("this is the tag req type %s\n", tag->resp_msgbuf);
+
     tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
     return true;
 }

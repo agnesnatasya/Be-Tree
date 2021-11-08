@@ -82,6 +82,8 @@ class SimAppContext
         struct
         {
             sim_req_tag_t *crt_req_tag;
+            AppMemPool<sim_req_tag_t> req_tag_pool;
+            bool is_ready;
         } client;
 
         struct
