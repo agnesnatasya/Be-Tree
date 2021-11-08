@@ -81,13 +81,7 @@ class SimAppContext
     public:
         struct
         {
-            // This is maintained between calls to GetReqBuf and SendRequest
-            // to reduce copying
             sim_req_tag_t *crt_req_tag;
-
-            // Request tags used for RPCs exchanged with the servers
-            AppMemPool<sim_req_tag_t> req_tag_pool;
-
         } client;
 
         struct
@@ -108,7 +102,7 @@ class SimTransport : public Transport
             const network::Configuration &config,
             uint8_t id);
         virtual ~SimTransport();
-        void Register(TransportReceiver *receiver, int replicaIdx);
+        void Register(TransportReceiver *receiver, int replicaIdx) override;
         void Run();
         void Wait();
         void Stop();

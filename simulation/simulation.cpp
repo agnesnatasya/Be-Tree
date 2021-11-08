@@ -5,16 +5,15 @@
 #include <iostream>
 #include <thread>
 #include <csignal>
+#include <boost/thread/thread.hpp>
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
 #include "network/simtransport.hpp"
 
-#include "common/gflags.hpp"
 #include "server/storage_server.hpp"
 #include "client/storage_client.hpp"
 
-#include <boost/thread/thread.hpp>
 
 using namespace std;
 
@@ -32,34 +31,39 @@ void server_thread_func(network::SimTransport *transport)
 
 int main(int argc, char **argv)
 {
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
-
-    network::Configuration config;
-    network::SimTransport *transport = new network::SimTransport(config, 0);
+    network::SimConfiguration config;
 
     /* Client and server creation */
     // It has to be in this order such that
-    // the transport object is correctly registered to the server
-    StorageClient *sc = new StorageClient(config, transport);
-    StorageServer *ss = new StorageServer(
-        config,
-        FLAGS_serverIndex,
-        transport,
-        new StorageServerApp()
-    );
+    // the transport object is correctly registered to the server    
 
     /* Threads creation */
-    std::vector<std::thread> server_thread_arr(1);
-    for (uint8_t i = 0; i < 1; i++)
+    int servers = 1;
+    int clients = 100;
+
+    std::vector<std::thread> server_thread_arr(servers);
+    std::vector<network::SimTransport> transport_arr(servers);
+    for (uint8_t i = 0; i < servers; i++)
     {
+        network::SimTransport *transport = new network::SimTransport(config, 0);
+        transport_arr[i] = transport;
+        StorageServer *ss = new StorageServer(
+            config,
+            FLAGS_serverIndex,
+            transport,
+            new StorageServerApp());
         server_thread_arr[i] = std::thread(server_thread_func, transport);
     }
-    std::vector<std::thread> client_thread_arr(100);
-    for (uint8_t i = 0; i < 100; i++)
+
+    std::vector<std::thread> client_thread_arr(clients);
+    for (uint8_t i = 0; i < clients; i++)
     {
+        int server_idx = 0;
+        network::SimTransport *transport = transport_arr[server_idx];
+        StorageClient *sc = new StorageClient(config, transport);
         client_thread_arr[i] = std::thread(client_thread_func, sc);
     }
-    /* Single thread, server and client in the same thread */
+
     /* Blocking join */
     for (auto &server_thread : server_thread_arr)
         server_thread.join();

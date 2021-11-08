@@ -9,7 +9,7 @@ EXPAND = lib/tmpl/expand
 
 RPC_PATH= 
 RPC_CFLAGS_RAW := 
-RPC_LDFLAGS_RAW := -ldl -lgflags  -libverbs
+RPC_LDFLAGS_RAW := -ldl -lgflags -libverbs
 
 #ERPC_CFLAGS_DPDK := -I $(RPC_PATH)/src -I /usr/include/dpdk -DDPDK=true -march=native
 #ERPC_LDFLAGS_DPDK := -L $(RPC_PATH)/build -lerpc -lnuma -ldl -lgflags -ldpdk
