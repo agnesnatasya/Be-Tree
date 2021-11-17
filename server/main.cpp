@@ -70,7 +70,7 @@ main(int argc, char **argv)
 //    }
 
     if (FLAGS_serverIndex == -1) {
-        fprintf(stderr, "option replicaIndex is required\n");
+        fprintf(stderr, "option serverIndex is required\n");
         return EXIT_FAILURE;
     }
 
@@ -80,6 +80,8 @@ main(int argc, char **argv)
         fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
     }
     network::Configuration config(configStream);
+
+    printf("Configuration loaded from file : %s\n", FLAGS_configFile.c_str());
 
     if (FLAGS_serverIndex >= config.n) {
         fprintf(stderr, "server index %d is out of bounds; "
