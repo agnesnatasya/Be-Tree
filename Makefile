@@ -9,11 +9,13 @@ EXPAND = lib/tmpl/expand
 
 ERPC_PATH= "./third_party/eRPC"
 
-ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
-ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
+#ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
+#ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
 
-#ERPC_CFLAGS_DPDK := -I $(ERPC_PATH)/src -I /usr/include/dpdk -DDPDK=true -march=native
-#ERPC_LDFLAGS_DPDK := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -ldpdk
+DPDK_LIBS := $(shell pkg-config --libs libdpdk)
+DPDK_CFLAGS := $(shell pkg-config --cflags libdpdk)
+ERPC_CFLAGS_DPDK := -I $(ERPC_PATH)/src -I $(ERPC_PATH)/third_party/asio/include $(DPDK_CFLAGS) -DERPC_DPDK=true -march=native
+ERPC_LDFLAGS_DPDK := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs -lmlx4 -lmlx5 $(DPDK_LIBS)
 
 CFLAGS_WARNINGS:= -Wno-unused-function -Wno-nested-anon-types -Wno-keyword-macro -Wno-uninitialized
 
@@ -26,8 +28,8 @@ CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 
 ## Add ERPC flags ##
-CFLAGS += $(ERPC_CFLAGS_RAW)
-LDFLAGS += $(ERPC_LDFLAGS_RAW)
+CFLAGS += $(ERPC_CFLAGS_DPDK)
+LDFLAGS += $(ERPC_LDFLAGS_DPDK)
 
 ## Debian package: check ##
 #CHECK_CFLAGS := $(shell pkg-config --cflags check)

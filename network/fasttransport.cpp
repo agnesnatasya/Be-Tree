@@ -23,6 +23,11 @@
 #include <numa.h>
 #include <boost/fiber/all.hpp>
 
+
+// TODO: currently, the multiplexing of received responses and requests is delegated to the 
+// TransportReceiver, but eRPC does a lot of that (the transport receiver just needs to register
+// callbacks)
+
 namespace network {
 
 static std::mutex fasttransport_lock;
@@ -35,7 +40,7 @@ static void fasttransport_response(void *_context, void *_tag) {
     auto *rt = reinterpret_cast<req_tag_t *>(_tag);
     Debug("Received respose, reqType = %d", rt->reqType);
     rt->src->ReceiveResponse(rt->reqType,
-                            reinterpret_cast<char *>(rt->resp_msgbuf.buf));
+                            reinterpret_cast<char *>(rt->resp_msgbuf.buf_));
     c->rpc->free_msg_buffer(rt->req_msgbuf);
     c->rpc->free_msg_buffer(rt->resp_msgbuf);
     c->client.req_tag_pool.free(rt);
@@ -43,25 +48,39 @@ static void fasttransport_response(void *_context, void *_tag) {
 
 // Function called when the server received a request
 // (clients never receive requests, just responses)
-static void fasttransport_request(erpc::ReqHandle *req_handle, void *_context) {
+static void fasttransport_request(erpc::ReqHandle *req_handle, void *_context, uint8_t reqType) {
     // save the req_handle for when we are in the SendMessage function
     auto *c = static_cast<AppContext *>(_context);
 #if MULTIPLE_ACTIVE_REQUESTS
     c->server.req_handles[c->server.req_handle_idx] = req_handle;
     // upcall to the app
     c->server.receiver->ReceiveRequest(c->server.req_handle_idx,
-                                req_handle->get_req_msgbuf()->get_req_type(),
+                                reqType,
                                 reinterpret_cast<char *>(req_handle->get_req_msgbuf()->buf),
                                 reinterpret_cast<char *>(req_handle->pre_resp_msgbuf.buf));
     c->server.req_handle_idx++;
 #else
     c->server.req_handle = req_handle;
     // upcall to the app
-    c->server.receiver->ReceiveRequest(req_handle->get_req_msgbuf()->get_req_type(),
-                                reinterpret_cast<char *>(req_handle->get_req_msgbuf()->buf),
-                                reinterpret_cast<char *>(req_handle->pre_resp_msgbuf.buf));
+    c->server.receiver->ReceiveRequest(reqType,
+                                reinterpret_cast<char *>(req_handle->get_req_msgbuf()->buf_),
+                                reinterpret_cast<char *>(req_handle->pre_resp_msgbuf_.buf_));
 #endif
 }
+
+// TODO: Hack!!! eRPC changed its API and now we can't get the requType from the reqMsgBuffer
+// So we create here a bunch of function macros for every reqType
+// We assume maximum 10 reqTypes (1-10); if you need more, add here
+
+#define GENERATE_FUNCTION(reqType) static void fasttransport_request_##reqType(erpc::ReqHandle *req_handle, void *_context) \
+                                               { fasttransport_request(req_handle, _context, reqType); }
+#define fasttransport_request_(reqType) fasttransport_request_##reqType
+
+GENERATE_FUNCTION(1)
+GENERATE_FUNCTION(2)
+GENERATE_FUNCTION(3)
+GENERATE_FUNCTION(4)
+GENERATE_FUNCTION(5)
 
 FastTransport::FastTransport(const network::Configuration &config,
                              std::string &ip,
@@ -121,9 +140,14 @@ FastTransport::FastTransport(const network::Configuration &config,
     Warning("Created nexus object with local_uri = %s", local_uri.c_str());
 
     // register receive handlers
-    for (uint8_t j = 1; j <= nr_req_types; j++) {
-        nexus->register_req_func(j, fasttransport_request, erpc::ReqFuncType::kForeground);
-    }
+    //for (uint8_t j = 1; j <= nr_req_types; j++) {
+    // TODO: Hack!!! For now, just register 5 functions, for 5 different ReqTypes
+    nexus->register_req_func(1, fasttransport_request_(1), erpc::ReqFuncType::kForeground);
+    nexus->register_req_func(2, fasttransport_request_(2), erpc::ReqFuncType::kForeground);
+    nexus->register_req_func(3, fasttransport_request_(3), erpc::ReqFuncType::kForeground);
+    nexus->register_req_func(4, fasttransport_request_(4), erpc::ReqFuncType::kForeground);
+    nexus->register_req_func(5, fasttransport_request_(5), erpc::ReqFuncType::kForeground);
+    //}
 
     // Create the RPC object
     //c->rpc = new erpc::Rpc<erpc::CTransport> (nexus[numa_node],
@@ -131,7 +155,7 @@ FastTransport::FastTransport(const network::Configuration &config,
                                             static_cast<void *>(c),
                                             static_cast<uint8_t>(id),
                                             basic_sm_handler, phy_port);
-    c->rpc->retry_connect_on_invalid_rpc_id = true;
+    c->rpc->retry_connect_on_invalid_rpc_id_ = true;
     fasttransport_lock.unlock();
 }
 
@@ -156,7 +180,7 @@ inline char *FastTransport::GetRequestBuf(size_t reqLen, size_t respLen) {
     c->client.crt_req_tag = c->client.req_tag_pool.alloc();
     c->client.crt_req_tag->req_msgbuf = c->rpc->alloc_msg_buffer_or_die(reqLen);
     c->client.crt_req_tag->resp_msgbuf = c->rpc->alloc_msg_buffer_or_die(respLen);
-    return reinterpret_cast<char *>(c->client.crt_req_tag->req_msgbuf.buf);
+    return reinterpret_cast<char *>(c->client.crt_req_tag->req_msgbuf.buf_);
 }
 
 inline int FastTransport::GetSession(TransportReceiver *src, uint8_t serverIdx, uint8_t dstRpcIdx) {
@@ -236,8 +260,8 @@ bool FastTransport::SendRequestToAllServers(TransportReceiver *src,
             rt->resp_msgbuf = c->rpc->alloc_msg_buffer_or_die(c->rpc->get_max_data_per_pkt());
             rt->reqType = reqType;
             rt->src = src;
-            std::memcpy(reinterpret_cast<char *>(rt->req_msgbuf.buf),
-                        reinterpret_cast<char *>(c->client.crt_req_tag->req_msgbuf.buf), msgLen);
+            std::memcpy(reinterpret_cast<char *>(rt->req_msgbuf.buf_),
+                        reinterpret_cast<char *>(c->client.crt_req_tag->req_msgbuf.buf_), msgLen);
             c->rpc->enqueue_request(session_id, reqType,
                                     &rt->req_msgbuf,
                                     &rt->resp_msgbuf,
@@ -274,7 +298,7 @@ bool FastTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
 // Assumes we already put the response in c->server.req_handle->pre_resp_msgbuf
 bool FastTransport::SendResponse(size_t msgLen) {
     // we get here from fasttransport_rpc_request
-    auto &resp = c->server.req_handle->pre_resp_msgbuf;
+    auto &resp = c->server.req_handle->pre_resp_msgbuf_;
     c->rpc->resize_msg_buffer(&resp, msgLen);
     c->rpc->enqueue_response(c->server.req_handle, &resp);
     Debug("Sent response, msgLen = %lu\n", msgLen);
