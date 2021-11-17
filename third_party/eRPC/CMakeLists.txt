@@ -45,6 +45,7 @@ include_directories(SYSTEM third_party/asio/include)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -march=native -Wall -Wextra -Werror -pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-conversion -Wold-style-cast -Wno-unused-function")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-nested-anon-types -Wno-keyword-macro -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-address-of-packed-member")
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party)
@@ -331,12 +332,25 @@ if(DPDK_NEEDED STREQUAL "true")
 
   else(WIN32)
     message(STATUS "DPDK for Linux")
-    find_library(DPDK_LIB dpdk)
-    if(NOT DPDK_LIB)
-      message(FATAL_ERROR "DPDK library not found")
-    endif()
 
-    set(LIBRARIES ${LIBRARIES} -Wl,--whole-archive dpdk -Wl,--no-whole-archive numa dl ibverbs mlx4 mlx5)
+
+    #find_library(DPDK_LIB dpdk)
+    #if(NOT DPDK_LIB)
+    #  message(FATAL_ERROR "DPDK library not found")
+    #endif()
+
+    set(LIBRARIES ${LIBRARIES} rte_telemetry rte_bpf
+	    rte_flow_classify rte_pipeline rte_table rte_port rte_fib
+	    rte_ipsec rte_vhost rte_stack rte_security rte_sched
+	    rte_reorder rte_rib rte_rcu rte_rawdev rte_pdump
+	    rte_power rte_member rte_lpm rte_latencystats rte_kni
+	    rte_jobstats rte_ip_frag rte_gso rte_gro rte_eventdev
+	    rte_efd rte_distributor rte_cryptodev rte_compressdev
+	    rte_cfgfile rte_bitratestats rte_bbdev rte_acl rte_timer
+	    rte_hash rte_metrics rte_cmdline rte_pci rte_ethdev
+	    rte_meter rte_net rte_mbuf rte_mempool rte_ring rte_eal
+	    rte_kvargs bsd -Wl,--no-whole-archive numa dl ibverbs mlx4
+	    mlx5)
 
     # DPDK include directory. Locating rte_config.h does not work on some systems.
     # Example: it may be kept in /usr/include/x86_64-linux-gnu/, and symlinked
@@ -347,7 +361,7 @@ if(DPDK_NEEDED STREQUAL "true")
     else()
       message(FATAL_ERROR "DPDK include directory not found")
     endif()
-    include_directories(SYSTEM ${DPDK_INCLUDE_DIR})
+    include_directories(SYSTEM ${DPDK_INCLUDE_DIR} /usr/include/dpdk/../x86_64-linux-gnu/dpdk /usr/include/libnl3)
   endif(WIN32)
 else()
   message(STATUS "DPDK not needed to build eRPC")
