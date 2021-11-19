@@ -70,7 +70,7 @@ main(int argc, char **argv)
 //    }
 
     if (FLAGS_serverIndex == -1) {
-        fprintf(stderr, "option serverIndex is required\n");
+        fprintf(stderr, "option --serverIndex is required\n");
         return EXIT_FAILURE;
     }
 

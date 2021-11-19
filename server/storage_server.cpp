@@ -49,6 +49,7 @@ void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf)
 }
 
 void StorageServer::HandleGetNodeId(char *reqBuf, char *respBuf, size_t &respLen) {
+    Debug("Received get node ID");
     auto *req = reinterpret_cast<nodeid_request_t *>(reqBuf);
     auto *resp = reinterpret_cast<nodeid_response_t *>(respBuf);
     resp->req_nr = req->req_nr;
