@@ -50,8 +50,9 @@ bool swap_space::cmp_by_last_access(swap_space::object *a, swap_space::object *b
   return a->last_access < b->last_access;
 }
 
-swap_space::swap_space(backing_store *bs, uint64_t n) :
+swap_space::swap_space(backing_store *bs, StorageClient *sc, uint64_t n) :
   backstore(bs),
+  sc(sc),
   max_in_memory_objects(n),
   objects(),
   lru_pqueue(cmp_by_last_access)

@@ -14,7 +14,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include "betree.hpp"
+
 #include "filesystem.hpp"
+#include "common/gflags.hpp"
+#include "network/configuration.hpp"
+#include "network/fasttransport.hpp"
 
 void timer_start(uint64_t &timer)
 {
@@ -283,147 +287,64 @@ int main(int argc, char **argv)
   //////////////////////
   // Argument parsing //
   //////////////////////
-  
-  while ((opt = getopt(argc, argv, "m:d:N:f:C:o:k:t:s:i:")) != -1) {
-    switch (opt) {
-    case 'm':
-      mode = optarg;
-      break;
-    case 'd':
-      backing_store_dir = optarg;
-      break;
-    case 'N':
-      max_node_size = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -N must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 'f':
-      min_flush_size = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -f must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 'C':
-      cache_size = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -C must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 'o':
-      script_outfile = optarg;
-      break;
-    case 'k':
-      number_of_distinct_keys = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -k must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 't':
-      nops = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -t must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 's':
-      random_seed = strtoull(optarg, &term, 10);
-      if (*term) {
-	std::cerr << "Argument to -s must be an integer" << std::endl;
-	usage(argv[0]);
-	exit(1);
-      }
-      break;
-    case 'i':
-      script_infile = optarg;
-      break;
-    default:
-      std::cerr << "Unknown option '" << (char)opt << "'" << std::endl;
-      usage(argv[0]);
-      exit(1);
-    }
-  }
-  
-  FILE *script_input = NULL;
-  FILE *script_output = NULL;
 
-  if (mode == NULL ||
-      (strcmp(mode, "test") != 0
-       && strcmp(mode, "benchmark-upserts") != 0
-			 && strcmp(mode, "benchmark-queries") != 0)) {
-    std::cerr << "Must specify a mode of \"test\" or \"benchmark\"" << std::endl;
-    usage(argv[0]);
-    exit(1);
-  }
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  if (strncmp(mode, "benchmark", strlen("benchmark")) == 0) {
-    if (script_infile) {
-      std::cerr << "Cannot specify an input script in benchmark mode" << std::endl;
-      usage(argv[0]);
-      exit(1);
+    if (FLAGS_configFile == "") {
+        fprintf(stderr, "option --configFile is required\n");
+        return EXIT_FAILURE;
     }
-    if (script_outfile) {
-      std::cerr << "Cannot specify an output script in benchmark mode" << std::endl;
-      usage(argv[0]);
-      exit(1);
-    }
-  }
-  
-  if (script_infile) {
-    script_input = fopen(script_infile, "r");
-    if (script_input == NULL) {
-      perror("Couldn't open input file");
-      exit(1);
-    }
-  }
-  
-  if (script_outfile) {
-    script_output = fopen(script_outfile, "w");
-    if (script_output == NULL) {
-      perror("Couldn't open output file");
-      exit(1);
-    }
-  }
 
-  srand(random_seed);
+    if (FLAGS_benchmark == "") {
+        fprintf(stderr, "option --benchmark is required\n");
+        return EXIT_FAILURE;
+    }
 
-  if (backing_store_dir == NULL) {
-    std::cerr << "-d <backing_store_directory> is required" << std::endl;
-    usage(argv[0]);
-    exit(1);
-  }
-  
+    srand(random_seed);
+
+    if (FLAGS_backingStoreDir == "") {
+        fprintf(stderr, "option --backingStoreDir is required\n");
+        return EXIT_FAILURE;
+    }
+
+    if (FLAGS_clientIP == "") {
+        fprintf(stderr, "option --clientIP is required\n");
+        return EXIT_FAILURE;
+    }
+
+    // Load configuration
+    std::ifstream configStream(FLAGS_configFile);
+    if (configStream.fail()) {
+        fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
+    }
+    network::Configuration config(configStream);
+
+    network::FastTransport *transport = new network::FastTransport(config,
+                                                FLAGS_clientIP,
+                                                //FLAGS_numServerThreads,
+                                                1,
+                                                4,
+                                                0,
+                                                0,
+                                                0);
+
+    StorageClient client(config, transport);
+
+
   ////////////////////////////////////////////////////////
   // Construct a betree and run the tests or benchmarks //
   ////////////////////////////////////////////////////////
   
-  one_file_per_object_backing_store ofpobs(backing_store_dir);
-  swap_space sspace(&ofpobs, cache_size);
+  one_file_per_object_backing_store ofpobs(FLAGS_backingStoreDir);
+  swap_space sspace(&ofpobs, &client, cache_size);
   betree<FKey, std::string> b(&sspace, max_node_size, min_flush_size);
   //betree<std::string, std::string> b(&sspace, max_node_size, min_flush_size);
   //betree<uint64_t, std::string> b(&sspace, max_node_size, min_flush_size);
 
-  if (strcmp(mode, "test") == 0) 
-    test(b, nops, number_of_distinct_keys, script_input, script_output);
-  else if (strcmp(mode, "benchmark-upserts") == 0)
+  if (FLAGS_benchmark == "benchmark-upserts")
     benchmark_upserts(b, nops, number_of_distinct_keys, random_seed);
-  else if (strcmp(mode, "benchmark-queries") == 0)
+  else if (FLAGS_benchmark ==  "benchmark-queries")
     benchmark_queries(b, nops, number_of_distinct_keys, random_seed);
-  
-  if (script_input)
-    fclose(script_input);
-  
-  if (script_output)
-    fclose(script_output);
 
   return 0;
 }

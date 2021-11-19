@@ -78,6 +78,7 @@
 #include <sstream>
 #include <cassert>
 #include "backing_store.hpp"
+#include "storage_client.hpp"
 #include "debug.hpp"
 
 class swap_space;
@@ -170,7 +171,7 @@ template<class X> void deserialize(std::iostream &fs, serialization_context &con
 
 class swap_space {
 public:
-  swap_space(backing_store *bs, uint64_t n);
+  swap_space(backing_store *bs, StorageClient *sc, uint64_t n);
 
   template<class Referent> class pointer;
 
@@ -397,8 +398,10 @@ public:
     // Only callable through swap_space::allocate(...)
     pointer(swap_space *sspace, Referent *tgt)
     {
+      printf("Creating pointer\n");
       ss = sspace;
       target = sspace->next_id++;
+      nodeid_t node_id = ss->sc->GetNodeId(0, 0, "" );
 
       object *o = new object(sspace, tgt);
       assert(o != NULL);
@@ -414,6 +417,7 @@ public:
   
 private:
   backing_store *backstore;  
+  StorageClient *sc;
 
   uint64_t next_id = 1;
   uint64_t next_access_time = 0;
