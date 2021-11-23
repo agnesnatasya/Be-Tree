@@ -155,7 +155,7 @@ def run_benchmark(bench_dir, clients, servers, parameters):
 
     # Wait for the servers to start.
     print(boxed('Waiting for servers to start.'))
-    time.sleep(10 + 2 * parameters.num_server_threads)
+    time.sleep(1 + 2 * parameters.num_server_threads)
     #time.sleep(170)
     bench_dir.write_string('servers_started_time.txt', str(datetime.datetime.now()))
 
