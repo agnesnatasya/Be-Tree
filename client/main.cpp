@@ -13,12 +13,15 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include "betree.hpp"
 
+
+#include "betree.hpp"
 #include "filesystem.hpp"
 #include "common/gflags.hpp"
 #include "network/configuration.hpp"
 #include "network/fasttransport.hpp"
+
+#include <boost/fiber/all.hpp>
 
 void timer_start(uint64_t &timer)
 {
@@ -268,26 +271,58 @@ void benchmark_queries(betree<FKey, std::string> &b,
 
 }
 
+
+void client_fiber_func(int fiber_id,
+                       network::Configuration config,
+                       network::FastTransport *transport) {
+
+    uint64_t max_node_size = DEFAULT_TEST_MAX_NODE_SIZE;
+    uint64_t min_flush_size = DEFAULT_TEST_MIN_FLUSH_SIZE;
+    uint64_t cache_size = DEFAULT_TEST_CACHE_SIZE;
+    uint64_t number_of_distinct_keys = DEFAULT_TEST_NDISTINCT_KEYS;
+    uint64_t nops = DEFAULT_TEST_NOPS;
+    unsigned int random_seed = time(NULL) * getpid();
+    srand(random_seed);
+
+    StorageClient client(config, transport);
+
+    one_file_per_object_backing_store ofpobs(FLAGS_backingStoreDir);
+    swap_space sspace(&ofpobs, &client, cache_size);
+    betree<FKey, std::string> b(&sspace, max_node_size, min_flush_size);
+
+    if (FLAGS_benchmark == "benchmark-upserts")
+        benchmark_upserts(b, nops, number_of_distinct_keys, random_seed);
+    else if (FLAGS_benchmark ==  "benchmark-queries")
+        benchmark_queries(b, nops, number_of_distinct_keys, random_seed);
+}
+
+void* client_thread_func(int thread_id, network::Configuration config) {
+
+    // create the transport
+    network::FastTransport *transport = new network::FastTransport(config,
+                                                FLAGS_clientIP,
+                                                FLAGS_numServerThreads,
+                                                0,
+                                                FLAGS_physPort,
+                                                0,
+                                                thread_id);
+
+    // create the client fibers
+    boost::fibers::fiber client_fibers[FLAGS_numClientFibers];
+
+    for (uint32_t i = 0; i < FLAGS_numClientFibers; i++) {
+        boost::fibers::fiber f(client_fiber_func, thread_id * FLAGS_numClientFibers + i, config, transport);
+        client_fibers[i] = std::move(f);
+    }
+
+    for (uint32_t i = 0; i < FLAGS_numClientFibers; i++) {
+        client_fibers[i].join();
+    }
+    return NULL;
+};
+
 int main(int argc, char **argv)
 {
-  char *mode = NULL;
-  uint64_t max_node_size = DEFAULT_TEST_MAX_NODE_SIZE;
-  uint64_t min_flush_size = DEFAULT_TEST_MIN_FLUSH_SIZE;
-  uint64_t cache_size = DEFAULT_TEST_CACHE_SIZE;
-  char *backing_store_dir = NULL;
-  uint64_t number_of_distinct_keys = DEFAULT_TEST_NDISTINCT_KEYS;
-  uint64_t nops = DEFAULT_TEST_NOPS;
-  char *script_infile = NULL;
-  char *script_outfile = NULL;
-  unsigned int random_seed = time(NULL) * getpid();
- 
-  int opt;
-  char *term;
-    
-  //////////////////////
-  // Argument parsing //
-  //////////////////////
-
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_configFile == "") {
@@ -299,8 +334,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "option --benchmark is required\n");
         return EXIT_FAILURE;
     }
-
-    srand(random_seed);
 
     if (FLAGS_backingStoreDir == "") {
         fprintf(stderr, "option --backingStoreDir is required\n");
@@ -319,33 +352,16 @@ int main(int argc, char **argv)
     }
     network::Configuration config(configStream);
 
-    network::FastTransport *transport = new network::FastTransport(config,
-                                                FLAGS_clientIP,
-                                                //FLAGS_numServerThreads,
-                                                1,
-                                                4,
-                                                0,
-                                                0,
-                                                0);
+    // Create the transport threads; each transport thread will run
+    // FLAGS_numClientFibers client fibers
+    std::vector<std::thread> client_thread_arr(FLAGS_numClientThreads);
+    for (size_t i = 0; i < FLAGS_numClientThreads; i++) {
+        client_thread_arr[i] = std::thread(client_thread_func, i, config);
+        // uint8_t idx = i/2 + (i % 2) * 12;
+        // erpc::bind_to_core(client_thread_arr[i], 0, i);
+    }
+    for (auto &thread : client_thread_arr) thread.join();
 
-    StorageClient client(config, transport);
-
-
-  ////////////////////////////////////////////////////////
-  // Construct a betree and run the tests or benchmarks //
-  ////////////////////////////////////////////////////////
-  
-  one_file_per_object_backing_store ofpobs(FLAGS_backingStoreDir);
-  swap_space sspace(&ofpobs, &client, cache_size);
-  betree<FKey, std::string> b(&sspace, max_node_size, min_flush_size);
-  //betree<std::string, std::string> b(&sspace, max_node_size, min_flush_size);
-  //betree<uint64_t, std::string> b(&sspace, max_node_size, min_flush_size);
-
-  if (FLAGS_benchmark == "benchmark-upserts")
-    benchmark_upserts(b, nops, number_of_distinct_keys, random_seed);
-  else if (FLAGS_benchmark ==  "benchmark-queries")
-    benchmark_queries(b, nops, number_of_distinct_keys, random_seed);
-
-  return 0;
+    return 0;
 }
 
