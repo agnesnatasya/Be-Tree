@@ -86,18 +86,18 @@ def haas_servers():
 def run_benchmark(bench_dir, clients, servers, parameters):
     # Clear the clients' and servers' out and err files in /mnt/log.
     print(boxed('Clearing *_out.txt and *_err.txt'))
-    clear_out_files = Parallel([host.run(['rm', parameters.logs_directory + '/*_out.txt'])
+    clear_out_files = Parallel([host.run(['rm', '{0}/*_out.txt'.format(parameters.logs_directory)])
                                 for host in list(clients.keys()) + list(servers.keys())],
                                 aggregate=True)
     clear_out_files.start(wait=True)
-    clear_err_files = Parallel([host.run(['rm', '/tmp/dfs_logs/*_err.txt'])
+    clear_err_files = Parallel([host.run(['rm', '{0}/*_err.txt'.format(parameters.logs_directory)])
                                 for host in list(clients.keys()) + list(servers.keys())],
                                 aggregate=True)
     clear_err_files.start(wait=True)
 
     # Clear the clients' log files in /mnt/log.
     print(boxed('Clearing *.log'))
-    clear_log_files = Parallel([client.run(['rm', '/tmp/dfs_logs/*.log'])
+    clear_log_files = Parallel([client.run(['rm', '{0}/*.log'.format(parameters.logs_directory)])
                                 for client in list(clients.keys())],
                                 aggregate=True)
     clear_log_files.start(wait=True)
@@ -138,9 +138,9 @@ def run_benchmark(bench_dir, clients, servers, parameters):
         # stderr as well, but it doesn't alway work.
         #
         # [1]: https://stackoverflow.com/a/692407/3187068
-        cmd.append(('> >(tee /tmp/dfs_logs/server_{0}_out.txt) ' +
-                    '2> >(tee /tmp/dfs_logs/server_{0}_err.txt >&2)')
-                   .format(server.hostname))
+        cmd.append(('> >(tee {0}/server_{1}_out.txt) ' +
+                    '2> >(tee {0}/server_{1}_err.txt >&2)')
+                   .format(parameters.logs_directory, server.hostname))
 
         # Record (and print) the command we run, so that we can re-run it later
         # while we debug.
@@ -188,9 +188,9 @@ def run_benchmark(bench_dir, clients, servers, parameters):
 
             # As with the servers, we record the stdout and stderr of the
             # clients. See above for details.
-            cmd.append(('> >(tee /tmp/dfs_logs/client_{0}_{1}_out.txt) ' +
-                        '2> >(tee /tmp/dfs_logs/client_{0}_{1}_err.txt >&2)')
-                       .format(client.hostname, client_i))
+            cmd.append(('> >(tee {0}/client_{1}_{2}_out.txt) ' +
+                        '2> >(tee {0}/client_{1}_{2}_err.txt >&2)')
+                       .format(parameters.logs_directory, client.hostname, client_i))
 
             # Record (and print) the command we run, so that we can re-run it
             # later while we debug.
@@ -209,12 +209,12 @@ def run_benchmark(bench_dir, clients, servers, parameters):
     for host in list(servers.keys()) + list(clients.keys()):
         subprocess.call([
             'scp',
-            '{}:/tmp/dfs_logs/*_out.txt'.format(host.hostname),
+            '{0}:{1}/*_out.txt'.format(host.hostname, parameters.logs_directory),
             bench_dir.path
         ])
         subprocess.call([
             'scp',
-            '{}:/tmp/dfs_logs/*_err.txt'.format(host.hostname),
+            '{0}:{1}/*_err.txt'.format(host.hostname, parameters.logs_directory),
             bench_dir.path
         ])
 
@@ -223,7 +223,7 @@ def run_benchmark(bench_dir, clients, servers, parameters):
     for client in list(clients.keys()[:parameters.num_client_machines]):
         subprocess.call([
             'scp',
-            '{}:/tmp/dfs_logs/*.log'.format(client.hostname),
+            '{0}:{1}/*.log'.format(client.hostname, parameters.logs_directory),
             bench_dir.path
         ])
 
