@@ -398,11 +398,10 @@ public:
     // Only callable through swap_space::allocate(...)
     pointer(swap_space *sspace, Referent *tgt)
     {
-      printf("Creating pointer\n");
       ss = sspace;
       target = sspace->next_id++;
       nodeid_t node_id = ss->sc->GetNodeId(0, 0, "" );
-
+      Debug("Received node id: %d", node_id.nodeIdx);
       object *o = new object(sspace, tgt);
       assert(o != NULL);
       target = o->id;
