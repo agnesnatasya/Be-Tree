@@ -100,6 +100,8 @@ void swap_space::write_back(swap_space::object *obj)
     std::iostream *out = backstore->get(bsid);
     out->write(buffer.data(), buffer.length());
     backstore->put(out);
+
+    sc->EvictNode(0,0,obj->id,buffer);
     if (obj->bsid > 0)
       backstore->deallocate(obj->bsid);
     obj->bsid = bsid;
