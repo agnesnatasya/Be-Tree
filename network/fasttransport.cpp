@@ -178,8 +178,6 @@ inline char *FastTransport::GetRequestBuf(size_t reqLen, size_t respLen) {
     if (respLen == 0)
         respLen = c->rpc->get_max_data_per_pkt();
 
-    Debug("Max data per packet= %ld", c->rpc->get_max_data_per_pkt());
-
     c->client.crt_req_tag = c->client.req_tag_pool.alloc();
     c->client.crt_req_tag->req_msgbuf = c->rpc->alloc_msg_buffer_or_die(reqLen);
     c->client.crt_req_tag->resp_msgbuf = c->rpc->alloc_msg_buffer_or_die(respLen);

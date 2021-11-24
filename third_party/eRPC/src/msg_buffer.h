@@ -65,6 +65,18 @@ class MsgBuffer {
     return sizeof(pkthdr_t) + (std::min)(kMaxDataPerPkt, data_size_ - offset);
   }
 
+  /// Return a string representation of this MsgBuffer
+  std::string to_string() const {
+    if (buf_ == nullptr) return "[Invalid]";
+
+    std::ostringstream ret;
+    ret << "[buf " << static_cast<void *>(buf_) << ", "
+        << "buffer " << buffer_.to_string() << ", "
+        << "data_size " << data_size_ << "(" << max_data_size_ << "), "
+        << "pkts " << num_pkts_ << "(" << max_num_pkts_ << ")]";
+    return ret.str();
+  }
+
   /// Construct a MsgBuffer with a dynamic Buffer allocated by eRPC.
   /// The zeroth packet header is stored at \p buffer.buf. \p buffer must have
   /// space for at least \p max_data_bytes, and \p max_num_pkts packet headers.
@@ -122,18 +134,6 @@ class MsgBuffer {
    * smaller than it's maximum data capacity due to resizing.
    */
   inline size_t get_data_size() const { return data_size_; }
-
-  /// Return a string representation of this MsgBuffer
-  std::string to_string() const {
-    if (buf_ == nullptr) return "[Invalid]";
-
-    std::ostringstream ret;
-    ret << "[buf " << static_cast<void *>(buf_) << ", "
-        << "buffer " << buffer_.to_string() << ", "
-        << "data_size " << data_size_ << "(" << max_data_size_ << "), "
-        << "pkts " << num_pkts_ << "(" << max_num_pkts_ << ")]";
-    return ret.str();
-  }
 
  private:
   /// The optional backing hugepage buffer. buffer.buf points to the zeroth
