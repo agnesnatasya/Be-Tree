@@ -177,6 +177,9 @@ inline char *FastTransport::GetRequestBuf(size_t reqLen, size_t respLen) {
         reqLen = c->rpc->get_max_data_per_pkt();
     if (respLen == 0)
         respLen = c->rpc->get_max_data_per_pkt();
+
+    Debug("Max data per packet= %ld", c->rpc->get_max_data_per_pkt());
+
     c->client.crt_req_tag = c->client.req_tag_pool.alloc();
     c->client.crt_req_tag->req_msgbuf = c->rpc->alloc_msg_buffer_or_die(reqLen);
     c->client.crt_req_tag->resp_msgbuf = c->rpc->alloc_msg_buffer_or_die(respLen);
@@ -225,8 +228,6 @@ bool FastTransport::SendRequestToServer(TransportReceiver *src,
                             &c->client.crt_req_tag->resp_msgbuf,
                             fasttransport_response,
                             reinterpret_cast<void *>(c->client.crt_req_tag));
-
-    Debug("Sending request: %s", c->client.crt_req_tag->req_msgbuf.to_string().c_str());
 
     while (src->Blocked()) {
         c->rpc->run_event_loop_once();
