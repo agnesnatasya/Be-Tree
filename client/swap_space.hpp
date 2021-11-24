@@ -172,7 +172,7 @@ template<class X> void deserialize(std::iostream &fs, serialization_context &con
 class swap_space {
 public:
   swap_space(backing_store *bs, StorageClient *sc, uint64_t n);
-
+  void evict_all();
   template<class Referent> class pointer;
 
   template<class Referent>

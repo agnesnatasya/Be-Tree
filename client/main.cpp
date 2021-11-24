@@ -294,6 +294,7 @@ void client_fiber_func(int fiber_id,
         benchmark_upserts(b, nops, number_of_distinct_keys, random_seed);
     else if (FLAGS_benchmark ==  "benchmark-queries")
         benchmark_queries(b, nops, number_of_distinct_keys, random_seed);
+    b.evict_all();
 }
 
 void* client_thread_func(int thread_id, network::Configuration config) {

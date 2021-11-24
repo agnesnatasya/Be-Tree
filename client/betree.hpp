@@ -695,6 +695,10 @@ public:
     return v;
   }
 
+  void evict_all() 
+  {
+    ss->evict_all();
+  }
   void dump_messages(void) {
     std::pair<MessageKey<Key>, Message<Value> > current;
 
