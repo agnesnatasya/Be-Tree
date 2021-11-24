@@ -60,11 +60,38 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
     return this->nodeIdReply;
 }
 
+bool StorageClient::EvictNode(uint8_t coreIdx, 
+                                    uint32_t serverIdx,
+                                    uint64_t node_id,
+                                    const string &request) {
+    
+    uint64_t reqId = ++lastReqId;
+    auto *reqBuf = reinterpret_cast<evictnode_request_t *>(
+      transport->GetRequestBuf(
+        sizeof(evictnode_request_t),
+        sizeof(evictnode_response_t)
+      )
+    );
+    reqBuf->req_nr = reqId;
+    reqBuf->node_id = node_id;
+    memcpy(reqBuf->buffer, request.c_str(), request.size());
+    blocked = true;
+    transport->SendRequestToServer(this,
+                                    evictNodeReqType,
+                                    serverIdx, coreIdx,
+                                    sizeof(evictnode_request_t));
+    return this->evictNodeReply;
+}
+
+
 void StorageClient::ReceiveResponse(uint8_t reqType, char *respBuf) {
     Debug("[%lu] received response", clientid);
     switch(reqType){
         case getNodeIdReqType:
             HandleGetNodeIdReply(respBuf);
+            break;
+        case evictNodeReqType:
+            HandleEvictNodeReply(respBuf);
             break;
         default:
             Warning("Unrecognized request type: %d\n", reqType);
@@ -86,5 +113,24 @@ void StorageClient::HandleGetNodeIdReply(char *respBuf) {
         return;
     }
     this->nodeIdReply.nodeIdx = resp->id;
+    blocked = false;
+}
+
+
+void StorageClient::HandleEvictNodeReply(char *respBuf) {
+    auto *resp = reinterpret_cast<evictnode_response_t *>(respBuf);
+
+    Debug(
+        "Client received EvictNodeReplyMessage for "
+        "request %lu.", resp->req_nr);
+
+    if (resp->req_nr != lastReqId) {
+        Warning(
+            "Client was not expecting a EvictNodeReplyMessage for request %lu, "
+            "so it is ignoring the request.",
+            resp->req_nr);
+        return;
+    }
+    this->evictNodeReply = resp->success;
     blocked = false;
 }

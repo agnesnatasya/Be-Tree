@@ -17,6 +17,7 @@ struct nodeid_response_t {
 struct evictnode_request_t {
     uint64_t req_nr;
     uint64_t node_id;
+    char buffer[4096];
 };
 
 struct evictnode_response_t {
