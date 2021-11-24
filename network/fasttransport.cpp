@@ -225,6 +225,9 @@ bool FastTransport::SendRequestToServer(TransportReceiver *src,
                             &c->client.crt_req_tag->resp_msgbuf,
                             fasttransport_response,
                             reinterpret_cast<void *>(c->client.crt_req_tag));
+
+    Debug("Sending request: %s", c->client.crt_req_tag->req_msgbuf.to_string().c_str());
+
     while (src->Blocked()) {
         c->rpc->run_event_loop_once();
         boost::this_fiber::yield();
