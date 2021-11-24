@@ -1,5 +1,5 @@
 from collections import namedtuple
-from process_logs import BenchmarkResult, process_client_logs
+#from process_logs import BenchmarkResult, process_client_logs
 from pyrem.host import RemoteHost
 from pyrem.task import Parallel
 import argparse
@@ -61,7 +61,7 @@ Parameters = namedtuple('Parameters', [
 # BenchmarkResult (the output).
 ParametersAndResult = namedtuple(
     'ParametersAndResult',
-    Parameters._fields + BenchmarkResult._fields)
+    Parameters._fields )#+ BenchmarkResult._fields)
 
 
 def boxed(s):
