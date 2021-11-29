@@ -14,14 +14,13 @@
 #include "server/storage_server.hpp"
 #include "client/storage_client.hpp"
 
-
 using namespace std;
 
 void client_thread_func(StorageClient *sc)
 {
     string request;
     nodeid_t result = sc->GetNodeId(0, 0, request);
-    cout << "This is the server's node: " << result.nodeIdx << "\n";
+    printf("This is the server's node: %d\n", result.nodeIdx);
 }
 
 void server_thread_func(network::SimTransport *transport)
@@ -34,25 +33,19 @@ int main(int argc, char **argv)
     network::Configuration config;
 
     /* Client and server creation */
-    // It has to be in this order such that
-    // the transport object is correctly registered to the server    
-
-    /* Threads creation */
+    network::SimTransport *transport = new network::SimTransport(config, 0);
     int servers = 100;
     int clients = 100;
 
-    network::SimTransport *transport = new network::SimTransport(config, 0);
+    // Server thread creation
     std::vector<std::thread> server_thread_arr(servers);
     for (uint8_t i = 0; i < servers; i++)
     {
-        StorageServer *ss = new StorageServer(
-            config,
-            i,
-            transport,
-            new StorageServerApp());
+        StorageServer *ss = new StorageServer(config, i, transport, new StorageServerApp());
         server_thread_arr[i] = std::thread(server_thread_func, transport);
     }
 
+    // Client thread creation
     std::vector<std::thread> client_thread_arr(clients);
     for (uint8_t i = 0; i < clients; i++)
     {
@@ -60,7 +53,7 @@ int main(int argc, char **argv)
         client_thread_arr[i] = std::thread(client_thread_func, sc);
     }
 
-    /* Blocking join */
+    /* Blocking join, waits indefinitely */
     for (auto &server_thread : server_thread_arr)
         server_thread.join();
 

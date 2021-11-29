@@ -111,14 +111,12 @@ void SimTransport::Run()
         // call the server
         simtransport_server_lock.lock();
         if (c->client.is_ready) {
-            printf("This is the reqType yo %d\n", c->client.crt_req_tag->reqType);
             c->server.receiver->ReceiveRequest(
                 c->client.crt_req_tag->reqType, 
                 c->client.crt_req_tag->req_msgbuf, 
                 c->client.crt_req_tag->resp_msgbuf
             );
             c->client.is_ready = false;
-            printf("This is the reqType yo %d\n", c->client.crt_req_tag->reqType);
         }
         simtransport_server_lock.unlock();
     }
@@ -156,9 +154,6 @@ bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
 bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
     sim_req_tag_t *tag = c->client.crt_req_tag;
-    printf("this is the tag req type %d\n", tag->reqType);
-    printf("this is the tag req type %s\n", tag->resp_msgbuf);
-
     tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
     return true;
 }
