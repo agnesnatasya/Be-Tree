@@ -40,6 +40,7 @@ class StorageServer : network::TransportReceiver
     bool Blocked() override { return false; };
     // new handlers
     void HandleGetNodeId(char *reqBuf, char *respBuf, size_t &respLen);
+    void HandleEvictNode(char *reqBuf, char *respBuf, size_t &respLen);
 
   private:
     network::Configuration config;

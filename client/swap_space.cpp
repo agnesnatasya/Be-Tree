@@ -50,8 +50,9 @@ bool swap_space::cmp_by_last_access(swap_space::object *a, swap_space::object *b
   return a->last_access < b->last_access;
 }
 
-swap_space::swap_space(backing_store *bs, uint64_t n) :
+swap_space::swap_space(backing_store *bs, StorageClient *sc, uint64_t n) :
   backstore(bs),
+  sc(sc),
   max_in_memory_objects(n),
   objects(),
   lru_pqueue(cmp_by_last_access)
@@ -91,13 +92,16 @@ void swap_space::write_back(swap_space::object *obj)
   std::stringstream sstream;
   serialize(sstream, ctxt, *obj->target);
   obj->is_leaf = ctxt.is_leaf;
-
+  std::cout << "In evict\n";
   if (obj->target_is_dirty) {
     std::string buffer = sstream.str();
+    std::cout << "Buffer len for " <<obj->id << "is:" << buffer.length() << "\n";
     uint64_t bsid = backstore->allocate(buffer.length());
     std::iostream *out = backstore->get(bsid);
     out->write(buffer.data(), buffer.length());
     backstore->put(out);
+
+    sc->EvictNode(0,0,obj->id,buffer);
     if (obj->bsid > 0)
       backstore->deallocate(obj->bsid);
     obj->bsid = bsid;
@@ -126,3 +130,23 @@ void swap_space::maybe_evict_something(void)
   }
 }
 
+void swap_space::evict_all(void)
+{
+  while (current_in_memory_objects > 0) {
+    object *obj = NULL;
+    for (auto it = lru_pqueue.begin(); it != lru_pqueue.end(); ++it)
+      if ((*it)->pincount == 0) {
+        obj = *it;
+        break;
+      }
+    if (obj == NULL)
+      return;
+    lru_pqueue.erase(obj);
+
+    write_back(obj);
+
+    delete obj->target;
+    obj->target = NULL;
+    current_in_memory_objects--;
+  }
+}

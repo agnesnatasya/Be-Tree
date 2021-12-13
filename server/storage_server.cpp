@@ -6,7 +6,7 @@
  **********************************************************************/
 #include "storage_server.hpp"
 #include "common/messages.hpp"
-
+#include <iostream>
 using namespace std;
 
 StorageServerApp::StorageServerApp() : current_id(0) {
@@ -39,6 +39,9 @@ void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf)
         case getNodeIdRequestType:
             HandleGetNodeId(reqBuf, respBuf, respLen);
             break;
+        case evictNodeReqType:
+            HandleEvictNode(reqBuf, respBuf, respLen);
+            break;
         default:
             Warning("Unrecognized request type: %d", reqType);
     }
@@ -49,9 +52,21 @@ void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf)
 }
 
 void StorageServer::HandleGetNodeId(char *reqBuf, char *respBuf, size_t &respLen) {
+    Debug("Received get node ID");
     auto *req = reinterpret_cast<nodeid_request_t *>(reqBuf);
     auto *resp = reinterpret_cast<nodeid_response_t *>(respBuf);
     resp->req_nr = req->req_nr;
     resp->id = storageApp->GetNodeId();
     respLen = sizeof(nodeid_response_t);
+}
+
+void StorageServer::HandleEvictNode(char *reqBuf, char *respBuf, size_t &respLen) {
+    Debug("Received HandleEvictNode");
+    auto *req = reinterpret_cast<evictnode_request_t *>(reqBuf);
+    auto *resp = reinterpret_cast<evictnode_response_t *>(respBuf);
+    std::string buffer = string(req->buffer, 4096);
+    std::cout << "Buffer for " << req->node_id << "is: " << buffer << "\n";
+    resp->req_nr = req->req_nr;
+    resp->success = true;
+    respLen = sizeof(evictnode_response_t);
 }

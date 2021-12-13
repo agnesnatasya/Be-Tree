@@ -85,7 +85,7 @@ main(int argc, char **argv)
     // }
 
     if (FLAGS_serverIndex == -1) {
-        fprintf(stderr, "option replicaIndex is required\n");
+        fprintf(stderr, "option --serverIndex is required\n");
         return EXIT_FAILURE;
     }
 
@@ -95,6 +95,7 @@ main(int argc, char **argv)
         fprintf(stderr, "unable to read configuration file: %s\n", FLAGS_configFile.c_str());
     }
     network::Configuration config(configStream);
+
 
     if (FLAGS_serverIndex >= config.n) {
         fprintf(stderr, "server index %d is out of bounds; "
@@ -112,16 +113,19 @@ main(int argc, char **argv)
 
     StorageServerApp *storageApp = new StorageServerApp();
 
-    // create replica threads
-    // for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
-    // for (uint8_t i = 0; i < ht_ct; i++) {
-    for (uint8_t i = 0; i < 1; i++)
-    {
+//    for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
+//    for (uint8_t i = 0; i < ht_ct; i++) {
+
+      for (uint8_t i = 0; i < 1; i++) {
         // thread_arr[i] = std::thread(server_thread_func, server, config, i%nn_ct, i);
         // erpc::bind_to_core(thread_arr[i], i%nn_ct, i/nn_ct);
-        // uint8_t numa_node = (i % 4 < 2)?0:1;
-        // uint8_t idx = i/4 + (i % 2) * 20;
-        thread_arr[i] = std::thread(server_thread_func, storageApp, config, i);
+//        uint8_t numa_node = (i % 4 < 2)?0:1;
+//        uint8_t idx = i/4 + (i % 2) * 20;
+        uint8_t numa_node = 0;
+        uint8_t idx = i;        
+        thread_arr[i] = std::thread(server_thread_func, storageApp, config, numa_node, i);
+        // TODO: erpc:bind_to_core causes Bus Errors
+	//erpc::bind_to_core(thread_arr[i], numa_node, idx);
     }
 
     for (auto &thread : thread_arr) thread.join();
