@@ -11,6 +11,7 @@
 #include "network/transport.hpp"
 #include "network/simtransport.hpp"
 
+#include "common/gflags.hpp"
 #include "server/storage_server.hpp"
 #include "client/storage_client.hpp"
 
@@ -32,10 +33,12 @@ int main(int argc, char **argv)
 {
     network::Configuration config;
 
-    /* Client and server creation */
+    /* Client and server thread creation */
     network::SimTransport *transport = new network::SimTransport(config, 0);
-    int servers = 100;
-    int clients = 100;
+    
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    int servers = FLAGS_numServerThreadsSim;
+    int clients = FLAGS_numClientThreadsSim;
 
     // Server thread creation
     std::vector<std::thread> server_thread_arr(servers);

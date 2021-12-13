@@ -5,7 +5,8 @@
 
 // Defines all the command line flags shared between both
 // severs and clients
-DEFINE_bool(isDev, false, "Flag whether this is development environment");
+DEFINE_uint32(numServerThreadsSim, 1, "The number of server threads in the simulation environment");
+DEFINE_uint32(numClientThreadsSim, 1, "The number of client threads in the simulation environment");
 DEFINE_string(configFile, "", "Path to the configuration file");
 DEFINE_int32(serverIndex, -1, "Index of the server in the config file");
 DEFINE_string(keysFile, "", "Path to the keys file");
