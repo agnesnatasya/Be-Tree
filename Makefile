@@ -7,16 +7,6 @@ CXX = g++
 LD = g++
 EXPAND = lib/tmpl/expand
 
-ERPC_PATH= "./third_party/eRPC"
-
-#ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
-#ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
-
-DPDK_LIBS := $(shell pkg-config --libs libdpdk)
-DPDK_CFLAGS := $(shell pkg-config --cflags libdpdk)
-ERPC_CFLAGS_DPDK := -I $(ERPC_PATH)/src -I $(ERPC_PATH)/third_party/asio/include $(DPDK_CFLAGS) -DERPC_DPDK=true -march=native
-ERPC_LDFLAGS_DPDK := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs -lmlx4 -lmlx5 $(DPDK_LIBS)
-
 CFLAGS_WARNINGS:= -Wno-unused-function -Wno-nested-anon-types -Wno-keyword-macro -Wno-uninitialized
 
 # -fno-omit-frame-pointer is needed to get accurate flame graphs. See [1] for
@@ -27,9 +17,11 @@ CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-fr
 CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 
-## Add ERPC flags ##
-CFLAGS += $(ERPC_CFLAGS_DPDK)
-LDFLAGS += $(ERPC_LDFLAGS_DPDK)
+## Add RPC flags ##
+RPC_CFLAGS := 
+RPC_LDFLAGS := -ldl -lgflags -libverbs
+CFLAGS += $(RPC_CFLAGS)
+LDFLAGS += $(RPC_LDFLAGS)
 
 ## Debian package: check ##
 #CHECK_CFLAGS := $(shell pkg-config --cflags check)
@@ -58,7 +50,7 @@ LDFLAGS += $(LIBSSL_LDFLAGS)
 GTEST_DIR := /usr/src/gtest
 
 # Additional flags
-PARANOID = 0
+PARANOID = 1
 ifneq ($(PARANOID),0)
 override CFLAGS += -DPARANOID=1
 $(info WARNING: Paranoid mode enabled)
@@ -281,7 +273,12 @@ print-%:
 #
 
 .PHONY: all
-all: 
+all:
+	ERPC_PATH= "./third_party/eRPC"
+	DPDK_LIBS := $(shell pkg-config --libs libdpdk)
+	DPDK_CFLAGS := $(shell pkg-config --cflags libdpdk)
+	RPC_CFLAGS := -I $(ERPC_PATH)/src -I $(ERPC_PATH)/third_party/asio/include $(DPDK_CFLAGS) -DERPC_DPDK=true -march=native
+	RPC_LDFLAGS := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs -lmlx4 -lmlx5 $(DPDK_LIBS)
 	$(BINS)
 
 $(TEST_BINS:%=run-%): run-%: %
@@ -291,13 +288,11 @@ $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
 .PHONY: simulation
-simulation: 
-	LDFLAGS += -ldl -lgflags -libverbs
-	$(SIM_BINS)
+simulation: $(SIM_BINS)
 
 .PHONY: test
-test:
-	$(TEST_BINS:%=run-%)
+test: $(TEST_BINS:%=run-%)
+
 .PHONY: check
 check: test
 
