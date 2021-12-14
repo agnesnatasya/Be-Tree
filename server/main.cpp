@@ -8,9 +8,7 @@
 #include <numa.h>
 
 #include "network/configuration.hpp"
-#include "network/transport.hpp"
 #include "network/fasttransport.hpp"
-
 #include "common/gflags.hpp"
 #include "storage_server.hpp"
 
@@ -18,42 +16,29 @@
 
 using namespace std;
 
-uint8_t get_numa_node(uint8_t thread_id)
-{
-    // TODO: provide mapping function from thread_id to numa_node
-    // for now assume it's round robin
-    return 0;
-}
-
 void server_thread_func(StorageServerApp *storageApp,
                         network::Configuration config,
-                        uint8_t thread_id) {
+                        uint8_t numa_node, uint8_t thread_id) {
     std::string local_uri = config.GetServerAddress(FLAGS_serverIndex).host;
     // TODO: provide mapping function from thread_id to numa_node
     // for now assume it's round robin
     // TODO: get rid of the hardcoded number of request types
     //int ht_ct = boost::thread::hardware_concurrency();
-    if (numa_available() == -1)
-    {
-        PPanic("NUMA library not available.");
-    }
     network::FastTransport *transport = new network::FastTransport(config,
-                                                                                local_uri,
-                                                                                // FLAGS_numServerThreads,
-                                                                                1,
-                                                                                // ht_ct,
-                                                                                4,
-                                                                                0,
-                                                                                get_numa_node(thread_id),
-                                                                                thread_id);
-    //    last_transport = transport;
+                                                local_uri,
+                                                //FLAGS_numServerThreads,
+                                                1,
+                                                //ht_ct,
+                                                4,
+                                                0,
+                                                numa_node,
+                                                thread_id);
+//    last_transport = transport;
 
     StorageServer *ss = new StorageServer(
-        config, 
-        FLAGS_serverIndex,
-        (FastTransport *)transport,
-        storageApp
-    );
+      config, FLAGS_serverIndex,
+      (network::FastTransport *)transport,
+      storageApp);
 
     transport->Run();
 }
@@ -79,10 +64,10 @@ main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    // if (FLAGS_keysFile == "") {
-    //     fprintf(stderr, "option --keysFile is required\n");
-    //     return EXIT_FAILURE;
-    // }
+//    if (FLAGS_keysFile == "") {
+//        fprintf(stderr, "option --keysFile is required\n");
+//        return EXIT_FAILURE;
+//    }
 
     if (FLAGS_serverIndex == -1) {
         fprintf(stderr, "option --serverIndex is required\n");
@@ -102,16 +87,22 @@ main(int argc, char **argv)
                 "only %d servers defined\n", FLAGS_serverIndex, config.n);
     }
 
+    // create replica threads
+    // bind round robin on the availlable numa nodes
+    if (numa_available() == -1) {
+        PPanic("NUMA library not available.");
+    }
+
     //int nn_ct = numa_max_node() + 1;
     //int ht_ct = boost::thread::hardware_concurrency()/boost::thread::physical_concurrency(); // number of hyperthreads
 
     // TODO: start the app on all available cores to regulate frequency boosting
-    // int ht_ct = boost::thread::hardware_concurrency();
-    // std::vector<std::thread> thread_arr(FLAGS_numServerThreads);
-    // std::vector<std::thread> thread_arr(ht_ct);
-    std::vector<std::thread> thread_arr(1);
+//    int ht_ct = boost::thread::hardware_concurrency();
+//      std::vector<std::thread> thread_arr(FLAGS_numServerThreads);
+//    std::vector<std::thread> thread_arr(ht_ct);
+      std::vector<std::thread> thread_arr(1);
 
-    StorageServerApp *storageApp = new StorageServerApp();
+      StorageServerApp *storageApp = new StorageServerApp();
 
 //    for (uint8_t i = 0; i < FLAGS_numServerThreads; i++) {
 //    for (uint8_t i = 0; i < ht_ct; i++) {

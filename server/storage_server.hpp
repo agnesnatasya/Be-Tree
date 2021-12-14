@@ -10,7 +10,6 @@
 
 #include "network/configuration.hpp"
 #include "network/transport.hpp"
-// #include "common/messages.hpp"
 
 class StorageServerApp
 {

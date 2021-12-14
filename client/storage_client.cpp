@@ -52,7 +52,7 @@ nodeid_t StorageClient::GetNodeId(uint8_t coreIdx,
     reqBuf->req_nr = reqId;
     blocked = true;
     transport->SendRequestToServer(this,
-                                    getNodeIdRequestType,
+                                    getNodeIdReqType,
                                     serverIdx, coreIdx,
                                     sizeof(nodeid_request_t));
     this->nodeIdReply.serverIdx = serverIdx;
@@ -87,7 +87,7 @@ bool StorageClient::EvictNode(uint8_t coreIdx,
 void StorageClient::ReceiveResponse(uint8_t reqType, char *respBuf) {
     Debug("[%lu] received response", clientid);
     switch(reqType){
-        case getNodeIdRequestType:
+        case getNodeIdReqType:
             HandleGetNodeIdReply(respBuf);
             break;
         case evictNodeReqType:

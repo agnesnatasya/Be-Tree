@@ -32,9 +32,8 @@ sudo apt-get install -y pkg-config
 2. Do `make` to compile and build the code
 3. Do `./client/client` for the client machine to run the client code
 4. Do `./server/server --configFile==<config file name> --serverIndex==<intended index of the server>`
-    * An example configuration file is the file `config` in the root directory. In this configuration file, there are 2 servers spawned on the same machine, occupying 2 different ports. In this example file, 
-        * Server index 0 indicates that this server instance will occupy the port 1234
-        * Server index 1 indicates that this server instance will occupy the port 1235
+    * An example configuration file is the file `config.txt` in the root directory. In this configuration file, there are 1 server spawned on one machine. In this example file, 
+        * Server index 0 indicates that this server instance will occupy the port 38450
 5. Enter the file system operations from the client side as needed. 
 
 ### Simulation Environment
