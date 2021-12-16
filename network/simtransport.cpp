@@ -133,6 +133,11 @@ bool SimTransport::SendRequestToServer(TransportReceiver *src, uint8_t reqType, 
     c->client.crt_req_tag->reqType = reqType;
     c->client.is_ready = true;
     while (src->Blocked()) {
+        if (c.server.is_ready) {
+            sim_req_tag_t *tag = c->client.crt_req_tag;
+            tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf); 
+            c->server.is_ready = false;
+        }
         boost::this_fiber::yield();
     }
     simtransport_client_lock.unlock();
@@ -146,15 +151,13 @@ bool SimTransport::SendRequestToAllServers(TransportReceiver *src, uint8_t reqTy
 
 bool SimTransport::SendResponse(uint64_t reqHandleIdx, size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
-    sim_req_tag_t *tag = c->client.crt_req_tag;
-    tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
+    c->server.is_ready = true;
     return true;
 }
 
 bool SimTransport::SendResponse(size_t msgLen) {
     Debug("Sent response, msgLen = %lu\n", msgLen);
-    sim_req_tag_t *tag = c->client.crt_req_tag;
-    tag->src->ReceiveResponse(tag->reqType, tag->resp_msgbuf);
+    c->server.is_ready = true;
     return true;
 }
 }

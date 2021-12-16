@@ -68,12 +68,6 @@ class SimRpc {
             return new char[msgLen];
         }
 
-        // void enqueue_request(sim_req_tag_t* req_tag)
-        // {
-        //     req_queue.push_back(req_tag);
-        // }
-
-        // std::deque<sim_req_tag_t*> req_queue;
 };
 
 class SimAppContext
@@ -90,6 +84,7 @@ class SimAppContext
         {
             // current req_handle
             TransportReceiver *receiver = nullptr;
+            bool is_ready;
         } server;
 
         // common to both servers and clients
@@ -100,6 +95,7 @@ class SimTransport : public Transport
 {
     public:
         static int MAX_DATA_PER_PKT;
+        bool isResponseCompleted;
         SimTransport(
             const network::Configuration &config,
             uint8_t id);

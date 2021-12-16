@@ -114,8 +114,6 @@ void StorageClient::HandleGetNodeIdReply(char *respBuf) {
         return;
     }
     this->nodeIdReply.nodeIdx = resp->id;
-    // memory barrier here, because the client is waiting 
-    // for a modified data structure
     blocked = false;
 }
 
