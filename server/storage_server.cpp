@@ -10,11 +10,11 @@
 using namespace std;
 
 StorageServerApp::StorageServerApp() : current_id(0) {
-
+    current_id++;
 }
 
 uint32_t StorageServerApp::GetNodeId() {
-   return current_id++;
+   return current_id;
 }
 
 StorageServer::StorageServer(network::Configuration config, int myIdx,
@@ -43,7 +43,7 @@ void StorageServer::ReceiveRequest(uint8_t reqType, char *reqBuf, char *respBuf)
             HandleEvictNode(reqBuf, respBuf, respLen);
             break;
         default:
-            Warning("Unrecognized rquest type: %d", reqType);
+            Warning("Unrecognized request type: %d", reqType);
     }
 
     // For every request, we need to send a response (because we use eRPC)

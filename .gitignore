@@ -1,0 +1,5 @@
+.obj/
+client/client
+server/server
+simulation/simulation
+NOTES.md

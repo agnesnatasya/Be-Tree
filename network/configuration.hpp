@@ -38,6 +38,10 @@ struct ServerAddress
 class Configuration
 {
 public:
+    /* Empty constructor for dummy configuration in simulation environment */
+    Configuration();
+
+    /* Non-empty constructors for real configuration */
     Configuration(const Configuration &c);
     Configuration(int n,
 //                  int f,

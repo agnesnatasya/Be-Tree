@@ -7,16 +7,6 @@ CXX = g++
 LD = g++
 EXPAND = lib/tmpl/expand
 
-ERPC_PATH= "./third_party/eRPC"
-
-#ERPC_CFLAGS_RAW := -I $(ERPC_PATH)/src -DRAW=true
-#ERPC_LDFLAGS_RAW := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs
-
-DPDK_LIBS := $(shell pkg-config --libs libdpdk)
-DPDK_CFLAGS := $(shell pkg-config --cflags libdpdk)
-ERPC_CFLAGS_DPDK := -I $(ERPC_PATH)/src -I $(ERPC_PATH)/third_party/asio/include $(DPDK_CFLAGS) -DERPC_DPDK=true -march=native
-ERPC_LDFLAGS_DPDK := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs -lmlx4 -lmlx5 $(DPDK_LIBS)
-
 CFLAGS_WARNINGS:= -Wno-unused-function -Wno-nested-anon-types -Wno-keyword-macro -Wno-uninitialized
 
 # -fno-omit-frame-pointer is needed to get accurate flame graphs. See [1] for
@@ -27,9 +17,11 @@ CFLAGS := -g -Wall $(CFLAGS_WARNINGS) -iquote.obj/gen -O2 -DNASSERT -fno-omit-fr
 CXXFLAGS := -g -std=c++11
 LDFLAGS := -levent_pthreads -pthread -lboost_fiber -lboost_context -lboost_system -lboost_thread
 
-## Add ERPC flags ##
-CFLAGS += $(ERPC_CFLAGS_DPDK)
-LDFLAGS += $(ERPC_LDFLAGS_DPDK)
+## Add RPC flags ##
+RPC_CFLAGS := 
+RPC_LDFLAGS := -ldl -lgflags -libverbs
+CFLAGS += $(RPC_CFLAGS)
+LDFLAGS += $(RPC_LDFLAGS)
 
 ## Debian package: check ##
 #CHECK_CFLAGS := $(shell pkg-config --cflags check)
@@ -113,6 +105,9 @@ SRCS :=
 # TEST_SRCS is just like SRCS, but these source files will be compiled
 # with testing related flags.
 TEST_SRCS :=
+# SIM_SRCS is just like SRCS, but these source files will be compiled
+# with simulation related flags.
+SIM_SRCS :=
 # GTEST_SRCS is tests that use Google's testing framework
 GTEST_SRCS :=
 
@@ -127,6 +122,12 @@ BINS :=
 # using the appropriate flags.  This is also used as the list of tests
 # to run for the `test' target.
 TEST_BINS :=
+# SIM_BINS is like BINS, but for simulation binaries.  They will be linked
+# using the appropriate flags.  This is also used as the list of tests
+# to run for the `sim` target.
+# It is similar to test that it uses simulated tranpsort, but you can also 
+# provide manual inputs to it, as contrast to test
+SIM_BINS :=
 
 # add-CFLAGS is a utility macro that takes a space-separated list of
 # sources and a set of CFLAGS.  It sets the CFLAGS for each provided
@@ -147,6 +148,7 @@ include debug/Rules.mk
 include network/Rules.mk
 include client/Rules.mk
 include server/Rules.mk
+include simulation/Rules.mk
 #include replication/common/Rules.mk
 #include replication/meerkatir/Rules.mk
 #include replication/leadermeerkatir/Rules.mk
@@ -181,7 +183,7 @@ include server/Rules.mk
 DEPFLAGS = -M -MF ${@:.o=.d} -MP -MT $@ -MG
 
 # $(call add-CFLAGS,$(TEST_SRCS),$(CHECK_CFLAGS))
-OBJS := $(SRCS:%.cpp=.obj/%.o) $(TEST_SRCS:%.cpp=.obj/%.o) $(GTEST_SRCS:%.cpp=.obj/%.o)
+OBJS := $(SRCS:%.cpp=.obj/%.o) $(TEST_SRCS:%.cpp=.obj/%.o) $(GTEST_SRCS:%.cpp=.obj/%.o) $(SIM_SRCS:%.cpp=.obj/%.o)
 
 define compile
 	@mkdir -p $(dir $@)
@@ -223,8 +225,9 @@ $(PROTOOBJS:%.o=%-pic.o): .obj/%-pic.o: .obj/gen/%.pb.cc $(PROTOSRCS)
 #
 
 $(call add-LDFLAGS,$(TEST_BINS),$(CHECK_LDFLAGS))
+$(call add-LDFLAGS,$(SIM_BINS),$(CHECK_LDFLAGS))
 
-$(BINS) $(TEST_BINS): %:
+$(BINS) $(TEST_BINS) $(SIM_BINS): %:
 	$(call trace,LD,$@,$(LD) -o $@ $^ $(LDFLAGS) $(LDFLAGS-$@))
 
 #
@@ -256,7 +259,7 @@ $(GTEST_MAIN) : .obj/gtest/gtest-all.o .obj/gtest/gtest_main.o
 
 .PHONY: clean
 clean:
-	$(call trace,RM,binaries,rm -f $(BINS) $(TEST_BINS))
+	$(call trace,RM,binaries,rm -f $(BINS) $(TEST_BINS) $(SIM_BINS))
 	$(call trace,RM,objects,rm -rf .obj)
 
 #
@@ -270,7 +273,13 @@ print-%:
 #
 
 .PHONY: all
-all: $(BINS)
+all:
+	ERPC_PATH= "./third_party/eRPC"
+	DPDK_LIBS := $(shell pkg-config --libs libdpdk)
+	DPDK_CFLAGS := $(shell pkg-config --cflags libdpdk)
+	RPC_CFLAGS := -I $(ERPC_PATH)/src -I $(ERPC_PATH)/third_party/asio/include $(DPDK_CFLAGS) -DERPC_DPDK=true -march=native
+	RPC_LDFLAGS := -L $(ERPC_PATH)/build -lerpc -lnuma -ldl -lgflags -libverbs -lmlx4 -lmlx5 $(DPDK_LIBS)
+	$(BINS)
 
 $(TEST_BINS:%=run-%): run-%: %
 	$(call trace,RUN,$<,$<)
@@ -278,8 +287,12 @@ $(TEST_BINS:%=run-%): run-%: %
 $(TEST_BINS:%=gdb-%): gdb-%: %
 	$(call trace,GDB,$<,CK_FORK=no gdb $<)
 
+.PHONY: simulation
+simulation: $(SIM_BINS)
+
 .PHONY: test
 test: $(TEST_BINS:%=run-%)
+
 .PHONY: check
 check: test
 

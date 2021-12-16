@@ -5,6 +5,8 @@
 
 // Defines all the command line flags shared between both
 // severs and clients
+DEFINE_uint32(numServerThreadsSim, 1, "The number of server threads in the simulation environment");
+DEFINE_uint32(numClientThreadsSim, 1, "The number of client threads in the simulation environment");
 DEFINE_string(configFile, "", "Path to the configuration file");
 DEFINE_string(backingStoreDir, "", "Path to the backing store directory");
 DEFINE_string(benchmark, "", "Benchmark mode (benchmark-<mode>, mode = upserts|queries)");

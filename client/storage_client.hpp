@@ -2,8 +2,8 @@
 #ifndef _STORAGE_CLIENT_H_
 #define _STORAGE_CLIENT_H_
 
-#include "network/fasttransport.hpp"
 #include "network/configuration.hpp"
+#include "network/transport.hpp"
 
 struct nodeid_t {
     uint32_t serverIdx;
